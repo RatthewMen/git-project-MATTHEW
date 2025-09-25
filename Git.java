@@ -1,14 +1,16 @@
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.*;
+import java.security.MessageDigest;
 
 public class Git{
 
     public static void main(String[] args) {
         //makeGitDirectoryAndFiles();
         //deleteGit();
-        StressTest(10);
+        //StressTest(10);
+        System.out.println(hashString("boar.txt"));
         
     }
 
@@ -85,6 +87,37 @@ public class Git{
         }
 
         System.out.println("Did " + times +  " cycles of making GIT and deleting it.");
+    }
+
+    //Hashes with the SHA-1 algorithim
+    public static String hashString(String filePath){
+        try{
+
+            byte[] Bytes = Files.readAllBytes(Paths.get(filePath));
+
+            MessageDigest digest = MessageDigest.getInstance("SHA-1");
+            byte[] hashBytes = digest.digest(Bytes);
+
+            StringBuilder hexString = new StringBuilder();
+            for (byte b : hashBytes) {
+                hexString.append(String.format("%02x", b));
+            }
+            //System.out.println("The hash for " + Files.readString(Paths.get(filePath)) + " is: " + hexString.toString());
+
+            return hexString.toString();
+
+        } catch (java.nio.file.NoSuchFileException e) {
+            System.err.println("File not found: " + filePath);
+            return null;
+    
+        } catch (IOException e) {
+            System.err.println("I/O error while reading file: " + filePath);
+            return null;
+        
+        } catch (Exception e){
+            System.out.println("DUMB ERROR FOR File : " + filePath);
+            return null;
+        }
     }
  
 }
