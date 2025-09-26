@@ -5,22 +5,23 @@ import java.nio.file.*;
 import java.security.MessageDigest;
 
 public class Git{
+    public static File directory = new File("git");
+    public static File objects = new File(directory.getPath(), "objects");
+    public static File index = new File(directory.getPath(), "index");
+    public static File HEAD = new File(directory.getPath(), "HEAD");
+    
 
     public static void main(String[] args) {
-        makeGitDirectoryAndFiles();
+        //makeGitDirectoryAndFiles();
         //deleteGit();
         //StressTest(10);
         //System.out.println(hashString("boar.txt"));
-        BLOBmaker("boar.txt");
+        //BLOBmaker("boar.txt");
+        BlobChecker(hashString("boar.txt"));
         
     }
 
     public static void makeGitDirectoryAndFiles(){
-
-        File directory = new File("git");
-        File objects = new File(directory.getPath(), "objects");
-        File index = new File(directory.getPath(), "index");
-        File HEAD = new File(directory.getPath(), "HEAD");
 
         if (checkGitFiles() == true){
             return;
@@ -56,11 +57,6 @@ public class Git{
 
     public static boolean checkGitFiles(){
 
-        File directory = new File("git");
-        File objects = new File(directory.getPath(), "objects");
-        File index = new File(directory.getPath(), "index");
-        File HEAD = new File(directory.getPath(), "HEAD");
-
         if (directory.exists() && objects.exists() && index.exists() && HEAD.exists()){
             System.out.println("Git Repository Already Exists");
             return true;
@@ -70,10 +66,6 @@ public class Git{
     }
 
     public static void deleteGit(){
-        File directory = new File("git");
-        File objects = new File(directory.getPath(), "objects");
-        File index = new File(directory.getPath(), "index");
-        File HEAD = new File(directory.getPath(), "HEAD");
         
         
         File[] files = objects.listFiles();
@@ -133,9 +125,6 @@ public class Git{
 
     public static void BLOBmaker(String filePath){
         String SHAHash = hashString(filePath);
-        
-        File directory = new File("git");
-        File objects = new File(directory, "objects");
         File Blob = new File(objects, SHAHash);
 
         try {
@@ -144,8 +133,22 @@ public class Git{
             System.out.println("Made new blob file for: " + filePath);
 
         } catch (Exception e) {
-            System.out.println("DUMB ERROR FOR File : " + Blob.toPath());
+            System.out.println("git stuff prob not found " + Blob.toPath());
         }
+    }
+
+    public static void BlobChecker(String blobName){
+        File[] files = objects.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.getName().equals(blobName)){
+                    System.out.println("There is a file with the blob name of: " + blobName);
+                } else {
+                    System.out.println("There is no file with the blob name of: " + blobName);
+                }
+            }
+        }
+        System.out.println("There is no file with the blob name of: " + blobName);
     }
  
 }
