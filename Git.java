@@ -7,10 +7,11 @@ import java.security.MessageDigest;
 public class Git{
 
     public static void main(String[] args) {
-        //makeGitDirectoryAndFiles();
+        makeGitDirectoryAndFiles();
         //deleteGit();
         //StressTest(10);
-        System.out.println(hashString("boar.txt"));
+        //System.out.println(hashString("boar.txt"));
+        BLOBmaker("boar.txt");
         
     }
 
@@ -73,7 +74,17 @@ public class Git{
         File objects = new File(directory.getPath(), "objects");
         File index = new File(directory.getPath(), "index");
         File HEAD = new File(directory.getPath(), "HEAD");
-
+        
+        
+        File[] files = objects.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (!file.delete()) {
+                    System.out.println("Failed to delete: " + file.getPath());
+                }
+            }
+        }
+        
         HEAD.delete();
         index.delete();
         objects.delete();
@@ -117,6 +128,23 @@ public class Git{
         } catch (Exception e){
             System.out.println("DUMB ERROR FOR File : " + filePath);
             return null;
+        }
+    }
+
+    public static void BLOBmaker(String filePath){
+        String SHAHash = hashString(filePath);
+        
+        File directory = new File("git");
+        File objects = new File(directory, "objects");
+        File Blob = new File(objects, SHAHash);
+
+        try {
+            byte[] stuff = Files.readAllBytes(Paths.get(filePath));
+            Files.write(Blob.toPath(), stuff, StandardOpenOption.CREATE);
+            System.out.println("Made new blob file for: " + filePath);
+
+        } catch (Exception e) {
+            System.out.println("DUMB ERROR FOR File : " + Blob.toPath());
         }
     }
  
