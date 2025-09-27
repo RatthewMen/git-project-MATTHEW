@@ -3,15 +3,18 @@ import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.security.MessageDigest;
-import java.util.zip.Deflater;
-
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+import java.util.zip.Deflater; 
 
 public class Git{
     public static File directory = new File("git");
     public static File objects = new File(directory.getPath(), "objects");
     public static File index = new File(directory.getPath(), "index");
     public static File HEAD = new File(directory.getPath(), "HEAD");
-    public static boolean compress = false;
+    public static File randomFiles = new File("randomFiles");
+    public static boolean compress = true;
     
 
     public static void main(String[] args) {
@@ -19,8 +22,12 @@ public class Git{
         makeGitDirectoryAndFiles();
         //StressTest(10);
         //System.out.println(hashString("boar.txt"));
-        BLOBmaker("boar.txt");
+        //BLOBmaker("boar.txt");
         //BlobChecker(hashString("boar.txt"));
+        deleteRandomFileMaker();
+        randomFileMaker(10);
+        multiBLOBMaker(randomFiles.listFiles());
+        FileMakerChecker();
         
     }
 
@@ -129,7 +136,7 @@ public class Git{
         String SHAHash = "";
         if (compress == true){
             SHAHash = hashString(fileCompressor(filePath));
-            System.out.println("Compressed shahash is: " + SHAHash);
+            //System.out.println("Compressed shahash is: " + SHAHash);
         } else{
             SHAHash = hashStringfilePath(filePath);
         }
@@ -141,32 +148,30 @@ public class Git{
         try {
             if (compress == true){
                 Files.write(Blob.toPath(), fileCompressor(filePath), StandardOpenOption.CREATE);
-                System.out.println("Using Compression");
+                //System.out.println("Using Compression");
 
             } else{
                 byte[] stuff = Files.readAllBytes(Paths.get(filePath));
                 Files.write(Blob.toPath(), stuff, StandardOpenOption.CREATE);
             }
             
-            System.out.println("Made new blob file for: " + filePath);
+            //System.out.println("Made new blob file for: " + filePath);
 
         } catch (Exception e) {
             System.out.println("git stuff prob not found (BLOB Maker) " + Blob.toPath());
         }
     }
 
-    public static void BlobChecker(String blobName){
+    public static boolean BlobChecker(String blobName){
         File[] files = objects.listFiles();
         if (files != null) {
             for (File file : files) {
                 if (file.getName().equals(blobName)){
-                    System.out.println("There is a file with the blob name of: " + blobName);
-                } else {
-                    System.out.println("There is no file with the blob name of: " + blobName);
+                    return true;
                 }
             }
         }
-        System.out.println("There is no file with the blob name of: " + blobName);
+        return false;
     }
     
     //https://docs.oracle.com/javase/8/docs/api/java/util/zip/Deflater.html 
@@ -199,10 +204,104 @@ public class Git{
     
     public static void addToIndex(String filePath, String SHAHash){
         try {
-            String entry = SHAHash + " " + Paths.get(filePath).getFileName().toString();
+            String entry = SHAHash + " " + Paths.get(filePath).getFileName().toString() + "\n";
             Files.write(index.toPath(), entry.getBytes(StandardCharsets.UTF_8), StandardOpenOption.APPEND);
         } catch (Exception e) {
             System.out.println("no index path prob");
         }
+    }
+
+    public static void randomFileMaker(int numberofFiles){
+        if (!randomFiles.exists()){
+            randomFiles.mkdir();
+        }
+
+        Random rand = new Random();
+        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        for (int i = 1; i <= numberofFiles; i++) {
+            try {
+                int length = rand.nextInt(41) + 100; //length of text
+
+                StringBuilder sb = new StringBuilder(length);
+                for (int j = 0; j < length; j++) {
+                    sb.append(chars.charAt(rand.nextInt(chars.length())));
+                }
+                String str = sb.toString();
+
+                String fileName = "file" + i + ".txt";
+                File newFile = new File(randomFiles.getPath(), fileName);
+                Files.write(newFile.toPath(), str.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE);
+                //System.out.println("Created " + fileName + " with content: " + str);
+
+            } catch (Exception e) {
+                System.err.println("Error creating random text file #" + i);
+            }
+        }
+    }
+    
+    public static void deleteRandomFileMaker(){
+        File[] files = randomFiles.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (!file.delete()) {
+                    System.out.println("Failed to delete: " + file.getPath());
+                }
+            }
+        }
+
+        randomFiles.delete();
+    }
+
+    public static void multiBLOBMaker(File[] files){
+        if (files != null) {
+            for (File file : files) {
+                BLOBmaker(file.getPath());
+            }
+        }
+    }
+
+    //https://stackoverflow.com/questions/7899525/how-to-split-a-string-by-space
+    public static void FileMakerChecker(){
+        try {
+            List<String> lines = Files.readAllLines(index.toPath());
+            ArrayList<String> hashes = new ArrayList<String>();
+            ArrayList<String> fileNames = new ArrayList<String>();
+
+            for (String line : lines){
+                String[] parts = line.split(" ", 2);
+                hashes.add(parts[0]);
+                fileNames.add(parts[1]);
+            }
+
+            //checking blobs
+            for (String hash : hashes){
+                if (BlobChecker(hash) == false){
+                    System.out.println(hash + " is not found");
+                }
+                
+            }
+            
+            //checking Files
+            for (String fileName : fileNames){
+                if (randomFilesChecker(fileName) == false){
+                    System.out.println(fileName + " is not found");
+                }
+            }
+
+        } catch (Exception e) {
+            System.out.println("Error reading file");
+        }
+    }
+
+    public static boolean randomFilesChecker(String fileName){
+        File[] files = randomFiles.listFiles();
+        if (files != null) {
+            for (File file : files) {
+                if (file.getName().equals(fileName)){
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }
