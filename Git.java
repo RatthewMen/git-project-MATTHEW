@@ -1,8 +1,10 @@
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.security.MessageDigest;
 import java.util.zip.Deflater;
+
 
 public class Git{
     public static File directory = new File("git");
@@ -104,7 +106,6 @@ public class Git{
         return null;
     }
 
-
     //Hashes with the SHA-1 algorithim
     public static String hashString(byte[] Bytes){
         try{
@@ -132,6 +133,8 @@ public class Git{
         } else{
             SHAHash = hashStringfilePath(filePath);
         }
+
+        addToIndex(filePath, SHAHash);
           
         File Blob = new File(objects, SHAHash);
 
@@ -193,5 +196,13 @@ public class Git{
 
         return null;   
     }
- 
+    
+    public static void addToIndex(String filePath, String SHAHash){
+        try {
+            String entry = SHAHash + " " + Paths.get(filePath).getFileName().toString();
+            Files.write(index.toPath(), entry.getBytes(StandardCharsets.UTF_8), StandardOpenOption.APPEND);
+        } catch (Exception e) {
+            System.out.println("no index path prob");
+        }
+    }
 }

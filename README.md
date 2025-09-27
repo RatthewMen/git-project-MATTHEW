@@ -21,3 +21,5 @@ method Blobchecker confirms if a BLOB file exist in the objects directory.
 2.3.2
 method fileCompressor compresses the original file's data using the Deflator class that uses ZLIB compression library. We also have a global compress boolean variable so we can make blobs with compressed and not compressed versions
 
+2.4
+method addToIndex adds a BLOB and file entries to the index in the order "Blob file"
