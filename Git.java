@@ -18,16 +18,19 @@ public class Git{
     
 
     public static void main(String[] args) {
-        deleteGit();
-        makeGitDirectoryAndFiles();
+        //deleteGit();
+        //makeGitDirectoryAndFiles();
         //StressTest(10);
         //System.out.println(hashString("boar.txt"));
         //BLOBmaker("boar.txt");
         //BlobChecker(hashString("boar.txt"));
-        deleteRandomFileMaker();
-        randomFileMaker(10);
-        multiBLOBMaker(randomFiles.listFiles());
-        FileMakerChecker();
+        //deleteRandomFileMaker();
+        //randomFileMaker(10);
+        //multiBLOBMaker(randomFiles.listFiles());
+        //FileMakerChecker();
+        masterRESET();
+        //randomFileMaker(10);
+        //multiBLOBMaker(randomFiles.listFiles());
         
     }
 
@@ -303,5 +306,12 @@ public class Git{
             }
         }
         return false;
+    }
+
+    public static void masterRESET(){
+        deleteGit();
+        makeGitDirectoryAndFiles();
+        deleteRandomFileMaker();
+        System.out.println("Reset to blank GIT");
     }
 }
