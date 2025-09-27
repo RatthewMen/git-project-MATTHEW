@@ -1,23 +1,24 @@
+import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.security.MessageDigest;
+import java.util.zip.Deflater;
 
 public class Git{
     public static File directory = new File("git");
     public static File objects = new File(directory.getPath(), "objects");
     public static File index = new File(directory.getPath(), "index");
     public static File HEAD = new File(directory.getPath(), "HEAD");
+    public static boolean compress = false;
     
 
     public static void main(String[] args) {
-        //makeGitDirectoryAndFiles();
-        //deleteGit();
+        deleteGit();
+        makeGitDirectoryAndFiles();
         //StressTest(10);
         //System.out.println(hashString("boar.txt"));
-        //BLOBmaker("boar.txt");
-        BlobChecker(hashString("boar.txt"));
+        BLOBmaker("boar.txt");
+        //BlobChecker(hashString("boar.txt"));
         
     }
 
@@ -92,12 +93,21 @@ public class Git{
         System.out.println("Did " + times +  " cycles of making GIT and deleting it.");
     }
 
-    //Hashes with the SHA-1 algorithim
-    public static String hashString(String filePath){
-        try{
-
+    //helper method for hashString
+    public static String hashStringfilePath(String filePath){
+        try {
             byte[] Bytes = Files.readAllBytes(Paths.get(filePath));
+            return hashString(Bytes);
+        } catch (Exception e) {
+            System.out.println("Cant find file: " + filePath);
+        }
+        return null;
+    }
 
+
+    //Hashes with the SHA-1 algorithim
+    public static String hashString(byte[] Bytes){
+        try{
             MessageDigest digest = MessageDigest.getInstance("SHA-1");
             byte[] hashBytes = digest.digest(Bytes);
 
@@ -106,34 +116,39 @@ public class Git{
                 hexString.append(String.format("%02x", b));
             }
             //System.out.println("The hash for " + Files.readString(Paths.get(filePath)) + " is: " + hexString.toString());
-
             return hexString.toString();
 
-        } catch (java.nio.file.NoSuchFileException e) {
-            System.err.println("File not found: " + filePath);
-            return null;
-    
-        } catch (IOException e) {
-            System.err.println("I/O error while reading file: " + filePath);
-            return null;
-        
         } catch (Exception e){
-            System.out.println("DUMB ERROR FOR File : " + filePath);
-            return null;
+            System.out.println("No SHA-1 encription");
         }
+        return null;
     }
 
     public static void BLOBmaker(String filePath){
-        String SHAHash = hashString(filePath);
+        String SHAHash = "";
+        if (compress == true){
+            SHAHash = hashString(fileCompressor(filePath));
+            System.out.println("Compressed shahash is: " + SHAHash);
+        } else{
+            SHAHash = hashStringfilePath(filePath);
+        }
+          
         File Blob = new File(objects, SHAHash);
 
         try {
-            byte[] stuff = Files.readAllBytes(Paths.get(filePath));
-            Files.write(Blob.toPath(), stuff, StandardOpenOption.CREATE);
+            if (compress == true){
+                Files.write(Blob.toPath(), fileCompressor(filePath), StandardOpenOption.CREATE);
+                System.out.println("Using Compression");
+
+            } else{
+                byte[] stuff = Files.readAllBytes(Paths.get(filePath));
+                Files.write(Blob.toPath(), stuff, StandardOpenOption.CREATE);
+            }
+            
             System.out.println("Made new blob file for: " + filePath);
 
         } catch (Exception e) {
-            System.out.println("git stuff prob not found " + Blob.toPath());
+            System.out.println("git stuff prob not found (BLOB Maker) " + Blob.toPath());
         }
     }
 
@@ -149,6 +164,34 @@ public class Git{
             }
         }
         System.out.println("There is no file with the blob name of: " + blobName);
+    }
+    
+    //https://docs.oracle.com/javase/8/docs/api/java/util/zip/Deflater.html 
+    //https://www.baeldung.com/java-compress-uncompress-byte-array
+    public static byte[] fileCompressor(String filePath){
+        try {
+            byte[] Bytes = Files.readAllBytes(Paths.get(filePath));
+            
+            Deflater deflater = new Deflater();
+            deflater.setInput(Bytes);
+            deflater.finish();
+
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            byte[] buffer = new byte[1024];
+
+            while (!deflater.finished()) {
+                int compressedSize = deflater.deflate(buffer);
+                outputStream.write(buffer, 0, compressedSize);
+            }
+
+            return outputStream.toByteArray();
+        } catch(java.io.UnsupportedEncodingException ex) {
+            System.out.println("UnsupportedEncodingExceptipon");
+        } catch (Exception e) {
+            System.out.println("git stuff prob not found (fileCompressor)" + filePath);
+        }
+
+        return null;   
     }
  
 }
