@@ -32,4 +32,5 @@ method
 method FileMakerChecker checks if the Blob and its respective textfile in the objects and randomFiles directory actually exists.
 method randomFilesChecker checks if a file exists in the randomFiles folder
 
-
+2.4.2
+method masterRESET deletes all generated files from previous tests and resets git and the rest of the directory to a clean state
