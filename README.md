@@ -23,3 +23,13 @@ method fileCompressor compresses the original file's data using the Deflator cla
 
 2.4
 method addToIndex adds a BLOB and file entries to the index in the order "Blob file"
+
+2.4.1 
+method randomFileMaker makes a user set amount of files that is a string of random characters (50-100) long. The character used are lower case, uppercase and numbers. It creates the randomFiles folder and puts all the files in there
+method deleteRandomFileMaker deletes everything in the file recursively
+method multiBLOBMaker accepts a list of Files and then makes Blobs from all the files using method Blobmaker 
+method  
+method FileMakerChecker checks if the Blob and its respective textfile in the objects and randomFiles directory actually exists.
+method randomFilesChecker checks if a file exists in the randomFiles folder
+
+
