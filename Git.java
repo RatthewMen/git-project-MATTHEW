@@ -2,24 +2,18 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
-import java.security.MessageDigest;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.zip.Deflater; 
+import java.util.HashMap;
+import java.util.zip.Deflater;
 
 public class Git{
-    public static File directory = new File("git");
-    public static File objects = new File(directory.getPath(), "objects");
-    public static File index = new File(directory.getPath(), "index");
-    public static File HEAD = new File(directory.getPath(), "HEAD");
-    public static File randomFiles = new File("randomFiles");
-    public static boolean compress = true;
     
+    public static HashMap<String, ArrayList<String>> indexMap = new HashMap<>();
+    public static boolean hashMapStatus = false;
 
     public static void main(String[] args) {
-        //deleteGit();
         //makeGitDirectoryAndFiles();
+        //deleteGit();
         //StressTest(10);
         //System.out.println(hashString("boar.txt"));
         //BLOBmaker("boar.txt");
@@ -28,145 +22,102 @@ public class Git{
         //randomFileMaker(10);
         //multiBLOBMaker(randomFiles.listFiles());
         //FileMakerChecker();
-        masterRESET();
-        //randomFileMaker(10);
-        //multiBLOBMaker(randomFiles.listFiles());
+        //BLOBmaker("/dupefiles/boar.txt");
+        //BLOBmaker("boar.txt");
+
+        // GitDirectory.masterRESET();
+        // BLOBmaker("boar.txt");
+        // RandomFiles.randomFileMaker(10);
+        // multiBLOBMaker(RandomFiles.randomFiles.listFiles());
+        //System.out.println("the index map is: " + IndexMaptoString());
+        staging("blob" , "boar.txt");
+
         
     }
 
-    public static void makeGitDirectoryAndFiles(){
-
-        if (checkGitFiles() == true){
-            return;
-        }
-
-        //makes git directory
-        if (!directory.exists()){
-            directory.mkdir();
-        }
-        //makes object directory inside of git
-        if (!objects.exists()){
-            objects.mkdir();
-        }
-        // makes the index file inside of git
-        try {
-            if (!index.exists()){
-                index.createNewFile();
-            }
-        } catch (Exception e) {
-            System.out.println("Error creating: " + index);
-        }
-        //makes the HEAD file inside of git
-        try {
-            if (!HEAD.exists()){
-                HEAD.createNewFile();
-            }
-        } catch (Exception e) {
-            System.out.println("Error creating: " + HEAD);
-        }
-        System.out.println("Git Repository Created");
-
-    }
-
-    public static boolean checkGitFiles(){
-
-        if (directory.exists() && objects.exists() && index.exists() && HEAD.exists()){
-            System.out.println("Git Repository Already Exists");
-            return true;
-            
-        }
-        return false;
-    }
-
-    public static void deleteGit(){
-        
-        
-        File[] files = objects.listFiles();
-        if (files != null) {
-            for (File file : files) {
-                if (!file.delete()) {
-                    System.out.println("Failed to delete: " + file.getPath());
-                }
-            }
-        }
-        
-        HEAD.delete();
-        index.delete();
-        objects.delete();
-        directory.delete();
-    }
-
-    public static void StressTest(int times){
-        for (int i = 0; i < times; i++){
-            makeGitDirectoryAndFiles();
-            deleteGit();
-        }
-
-        System.out.println("Did " + times +  " cycles of making GIT and deleting it.");
-    }
-
-    //helper method for hashString
-    public static String hashStringfilePath(String filePath){
-        try {
-            byte[] Bytes = Files.readAllBytes(Paths.get(filePath));
-            return hashString(Bytes);
-        } catch (Exception e) {
-            System.out.println("Cant find file: " + filePath);
-        }
-        return null;
-    }
-
-    //Hashes with the SHA-1 algorithim
-    public static String hashString(byte[] Bytes){
-        try{
-            MessageDigest digest = MessageDigest.getInstance("SHA-1");
-            byte[] hashBytes = digest.digest(Bytes);
-
-            StringBuilder hexString = new StringBuilder();
-            for (byte b : hashBytes) {
-                hexString.append(String.format("%02x", b));
-            }
-            //System.out.println("The hash for " + Files.readString(Paths.get(filePath)) + " is: " + hexString.toString());
-            return hexString.toString();
-
-        } catch (Exception e){
-            System.out.println("No SHA-1 encription");
-        }
-        return null;
-    }
-
+    
     public static void BLOBmaker(String filePath){
-        String SHAHash = "";
-        if (compress == true){
-            SHAHash = hashString(fileCompressor(filePath));
-            //System.out.println("Compressed shahash is: " + SHAHash);
-        } else{
-            SHAHash = hashStringfilePath(filePath);
-        }
+        String SHAHash = Hashing.CompressOrNot(filePath);
 
-        addToIndex(filePath, SHAHash);
-          
-        File Blob = new File(objects, SHAHash);
+        //System.out.println("HASH: " + SHAHash);
+        
+        File Blob = new File(GitDirectory.objects, SHAHash);
+        try {
+            Blob.createNewFile();
+        } catch (Exception e) {
+            System.out.println("Can't create file: " + Blob.toPath());
+        }
+        
+        addToIndex("blob", filePath, SHAHash);
+
 
         try {
-            if (compress == true){
-                Files.write(Blob.toPath(), fileCompressor(filePath), StandardOpenOption.CREATE);
+            if (Hashing.compress == true){
+                Files.write(Blob.toPath(), Hashing.fileCompressor(filePath), StandardOpenOption.CREATE);
                 //System.out.println("Using Compression");
 
             } else{
                 byte[] stuff = Files.readAllBytes(Paths.get(filePath));
-                Files.write(Blob.toPath(), stuff, StandardOpenOption.CREATE);
+                Files.write(Blob.toPath(), stuff, StandardOpenOption.TRUNCATE_EXISTING);
             }
             
             //System.out.println("Made new blob file for: " + filePath);
 
         } catch (Exception e) {
-            System.out.println("git stuff prob not found (BLOB Maker) " + Blob.toPath());
+            System.out.println("Error moment (BLOB Maker) for: " + Blob.toPath() + "\nException is: " + e);
         }
     }
 
+    public static void Blobremover(String type, String filePath){
+
+        String abspath = Paths.get(filePath).toAbsolutePath().toString();
+        String path = abspath.substring(abspath.indexOf("git"));
+        String oldHash = null;
+        //System.out.println("the path is: " + path);
+        
+        for (HashMap.Entry<String, ArrayList<String>> entry : indexMap.entrySet()) {
+            ArrayList<String> paths = entry.getValue();
+            if (paths.contains(path)) {
+                oldHash = entry.getKey().substring(entry.getKey().indexOf(" ") + 1);
+                break;
+            }
+        }
+        //System.out.println("the index map is: " + IndexMaptoString());
+
+        if (oldHash == null) {
+            System.out.println("No blob found for file: " + path);
+            return;
+        }
+
+        File oldBlob = new File(GitDirectory.objects, oldHash);
+        oldBlob.delete();
+
+        removeFromIndex(type, filePath);
+    }
+
+    //assumes that the file has been changed
+    public static void staging(String type, String filePath){
+        if (hashMapStatus == false){
+            System.out.println("remaking hashmap rn!");
+            remakeHashMap();
+            System.out.println("the index map is: " + IndexMaptoString());
+            hashMapStatus = true;
+        }
+        else {
+            System.out.println("wth code bruh moment");
+        }
+        //removes the old blob
+        Blobremover(type, filePath);
+
+        //adds blob
+        if (type.equals("blob")){
+            BLOBmaker(filePath);
+        }
+        
+    }
+
     public static boolean BlobChecker(String blobName){
-        File[] files = objects.listFiles();
+        File[] files = GitDirectory.objects.listFiles();
         if (files != null) {
             for (File file : files) {
                 if (file.getName().equals(blobName)){
@@ -176,84 +127,82 @@ public class Git{
         }
         return false;
     }
-    
-    //https://docs.oracle.com/javase/8/docs/api/java/util/zip/Deflater.html 
-    //https://www.baeldung.com/java-compress-uncompress-byte-array
-    public static byte[] fileCompressor(String filePath){
-        try {
-            byte[] Bytes = Files.readAllBytes(Paths.get(filePath));
-            
-            Deflater deflater = new Deflater();
-            deflater.setInput(Bytes);
-            deflater.finish();
 
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            byte[] buffer = new byte[1024];
+    public static void removeFromIndex(String type, String filePath){
+        String abspath = Paths.get(filePath).toAbsolutePath().toString();
+        String path = abspath.substring(abspath.indexOf("git"));
 
-            while (!deflater.finished()) {
-                int compressedSize = deflater.deflate(buffer);
-                outputStream.write(buffer, 0, compressedSize);
+        //String name = Paths.get(filePath).getFileName().toString();
+        //removes from hashmap 
+        for (HashMap.Entry<String, ArrayList<String>> entry : indexMap.entrySet()) {
+            ArrayList<String> paths = entry.getValue();
+            if (paths.contains(path)){
+                paths.remove(path);
+                if (paths.isEmpty() == true){
+                    indexMap.remove(entry);
+                }
             }
-
-            return outputStream.toByteArray();
-        } catch(java.io.UnsupportedEncodingException ex) {
-            System.out.println("UnsupportedEncodingExceptipon");
-        } catch (Exception e) {
-            System.out.println("git stuff prob not found (fileCompressor)" + filePath);
         }
 
-        return null;   
+        writeToIndex();
     }
     
-    public static void addToIndex(String filePath, String SHAHash){
+    
+    public static void addToIndex(String type, String filePath, String SHAHash){
+        String abspath = Paths.get(filePath).toAbsolutePath().toString();
+        String path = abspath.substring(abspath.indexOf("git"));
+        
+        ArrayList<String> pathsOfHash = new ArrayList<String>();
+        if (indexMap.get(type + " " + SHAHash)!= null){
+            pathsOfHash = indexMap.get(type + " " + SHAHash);
+            
+        }
+    
+        pathsOfHash.add(path);
+        indexMap.put(type + " " + SHAHash, pathsOfHash);
+        
+        writeToIndex();
+    }
+
+    public static void writeToIndex(){
         try {
-            String entry = SHAHash + " " + Paths.get(filePath).getFileName().toString() + "\n";
-            Files.write(index.toPath(), entry.getBytes(StandardCharsets.UTF_8), StandardOpenOption.APPEND);
+            Files.write(GitDirectory.index.toPath(), IndexMaptoString().getBytes(StandardCharsets.UTF_8), StandardOpenOption.TRUNCATE_EXISTING);
         } catch (Exception e) {
             System.out.println("no index path prob");
         }
     }
 
-    public static void randomFileMaker(int numberofFiles){
-        if (!randomFiles.exists()){
-            randomFiles.mkdir();
-        }
+    public static String IndexMaptoString() {
+        StringBuilder sb = new StringBuilder();
 
-        Random rand = new Random();
-        String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-        for (int i = 1; i <= numberofFiles; i++) {
-            try {
-                int length = rand.nextInt(41) + 100; //length of text
+        for (HashMap.Entry<String, ArrayList<String>> entry : indexMap.entrySet()) {
+            String key = entry.getKey();
+            ArrayList<String> paths = entry.getValue();
 
-                StringBuilder sb = new StringBuilder(length);
-                for (int j = 0; j < length; j++) {
-                    sb.append(chars.charAt(rand.nextInt(chars.length())));
-                }
-                String str = sb.toString();
-
-                String fileName = "file" + i + ".txt";
-                File newFile = new File(randomFiles.getPath(), fileName);
-                Files.write(newFile.toPath(), str.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE);
-                //System.out.println("Created " + fileName + " with content: " + str);
-
-            } catch (Exception e) {
-                System.err.println("Error creating random text file #" + i);
+            for (String path : paths) {
+                sb.append(key).append(" ").append(path).append("\n");
             }
         }
+        //System.out.println(sb.toString());
+        return sb.toString();
     }
     
-    public static void deleteRandomFileMaker(){
-        File[] files = randomFiles.listFiles();
-        if (files != null) {
-            for (File file : files) {
-                if (!file.delete()) {
-                    System.out.println("Failed to delete: " + file.getPath());
-                }
-            }
-        }
+    public static void remakeHashMap(){
+        try {
+            for (String line : Files.readAllLines(GitDirectory.index.toPath(), StandardCharsets.UTF_8)) {
+                String[] parts = line.split(" ", 3);
+                String key = parts[0] + " " + parts[1]; 
+                String path = parts[2];
 
-        randomFiles.delete();
+                ArrayList<String> paths = indexMap.getOrDefault(key, new ArrayList<>());
+                paths.add(path);
+                indexMap.put(key, paths);
+            }
+        } catch (Exception e) {
+            System.out.println("Failed to load index");
+        }
     }
+
 
     public static void multiBLOBMaker(File[] files){
         if (files != null) {
@@ -263,55 +212,6 @@ public class Git{
         }
     }
 
-    //https://stackoverflow.com/questions/7899525/how-to-split-a-string-by-space
-    public static void FileMakerChecker(){
-        try {
-            List<String> lines = Files.readAllLines(index.toPath());
-            ArrayList<String> hashes = new ArrayList<String>();
-            ArrayList<String> fileNames = new ArrayList<String>();
 
-            for (String line : lines){
-                String[] parts = line.split(" ", 2);
-                hashes.add(parts[0]);
-                fileNames.add(parts[1]);
-            }
 
-            //checking blobs
-            for (String hash : hashes){
-                if (BlobChecker(hash) == false){
-                    System.out.println(hash + " is not found");
-                }
-                
-            }
-            
-            //checking Files
-            for (String fileName : fileNames){
-                if (randomFilesChecker(fileName) == false){
-                    System.out.println(fileName + " is not found");
-                }
-            }
-
-        } catch (Exception e) {
-            System.out.println("Error reading file");
-        }
-    }
-
-    public static boolean randomFilesChecker(String fileName){
-        File[] files = randomFiles.listFiles();
-        if (files != null) {
-            for (File file : files) {
-                if (file.getName().equals(fileName)){
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    public static void masterRESET(){
-        deleteGit();
-        makeGitDirectoryAndFiles();
-        deleteRandomFileMaker();
-        System.out.println("Reset to blank GIT");
-    }
 }
