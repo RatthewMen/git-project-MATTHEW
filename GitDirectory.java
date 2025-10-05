@@ -53,8 +53,14 @@ public class GitDirectory {
     }
 
     public static void deleteGit(){
-        
-        
+        deleteIndex();
+        HEAD.delete();
+        index.delete();
+        objects.delete();
+        directory.delete();
+    }
+
+    public static void deleteIndex(){
         File[] files = objects.listFiles();
         if (files != null) {
             for (File file : files) {
@@ -63,11 +69,6 @@ public class GitDirectory {
                 }
             }
         }
-        
-        HEAD.delete();
-        index.delete();
-        objects.delete();
-        directory.delete();
     }
 
     public static void StressTest(int times){

@@ -1,10 +1,9 @@
-import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.zip.Deflater;
 
 public class Git{
     
@@ -25,12 +24,14 @@ public class Git{
         //BLOBmaker("/dupefiles/boar.txt");
         //BLOBmaker("boar.txt");
 
-        // GitDirectory.masterRESET();
-        // BLOBmaker("boar.txt");
-        // RandomFiles.randomFileMaker(10);
-        // multiBLOBMaker(RandomFiles.randomFiles.listFiles());
+        GitDirectory.masterRESET();
+        //BLOBmaker("boar.txt");
+        
+        //multiBLOBMaker(RandomFiles.randomFiles.listFiles());
         //System.out.println("the index map is: " + IndexMaptoString());
-        staging("blob" , "boar.txt");
+        //staging("blob" , "boar.txt");
+        RandomFiles.randomFileMaker(4);
+        DirectoryTreeGenerator(RandomFiles.randomFiles.getPath());
 
         
     }
@@ -48,7 +49,7 @@ public class Git{
             System.out.println("Can't create file: " + Blob.toPath());
         }
         
-        addToIndex("blob", filePath, SHAHash);
+        addToIndex(filePath, SHAHash);
 
 
         try {
@@ -148,18 +149,18 @@ public class Git{
     }
     
     
-    public static void addToIndex(String type, String filePath, String SHAHash){
+    public static void addToIndex(String filePath, String SHAHash){
         String abspath = Paths.get(filePath).toAbsolutePath().toString();
         String path = abspath.substring(abspath.indexOf("git"));
         
         ArrayList<String> pathsOfHash = new ArrayList<String>();
-        if (indexMap.get(type + " " + SHAHash)!= null){
-            pathsOfHash = indexMap.get(type + " " + SHAHash);
+        if (indexMap.get(SHAHash)!= null){
+            pathsOfHash = indexMap.get(SHAHash);
             
         }
     
         pathsOfHash.add(path);
-        indexMap.put(type + " " + SHAHash, pathsOfHash);
+        indexMap.put(SHAHash, pathsOfHash);
         
         writeToIndex();
     }
@@ -190,9 +191,9 @@ public class Git{
     public static void remakeHashMap(){
         try {
             for (String line : Files.readAllLines(GitDirectory.index.toPath(), StandardCharsets.UTF_8)) {
-                String[] parts = line.split(" ", 3);
-                String key = parts[0] + " " + parts[1]; 
-                String path = parts[2];
+                String[] parts = line.split(" ", 2);
+                String key = parts[0]; 
+                String path = parts[1];
 
                 ArrayList<String> paths = indexMap.getOrDefault(key, new ArrayList<>());
                 paths.add(path);
@@ -210,6 +211,47 @@ public class Git{
                 BLOBmaker(file.getPath());
             }
         }
+    }
+
+    public static String DirectoryTreeGenerator(String directoryPath){
+        File dir = new File(directoryPath);
+        if (!dir.isDirectory()){
+            System.out.println("this is not a directory bruv");
+        }
+
+        StringBuilder sb = new StringBuilder();
+        try {
+            File[] files = dir.listFiles();
+            if (files != null) {
+                for (File file : files) {
+                    if (file.isFile()){
+                        String fileHash = Hashing.hashStringfilePath(file.getPath());
+                        sb.append("blob ").append(fileHash).append(" ").append(file.getPath()).append("\n");
+                        BLOBmaker(file.getPath());
+                    } else if (file.isDirectory()){
+                        String subTreeHash = DirectoryTreeGenerator(file.getPath());
+                        sb.append("tree ").append(subTreeHash).append(" ").append(file.getPath()).append("\n");
+                    } else{
+                        System.out.println("What file even is this (not a file or folder)");
+                    }
+                }
+            }
+
+
+            String treeHash = Hashing.hashString(sb.toString().getBytes());
+            File tree = new File(GitDirectory.objects.getPath(),treeHash);
+            if (!tree.exists()){
+                tree.createNewFile();
+            }
+            Files.write(tree.toPath(), sb.toString().getBytes(), StandardOpenOption.TRUNCATE_EXISTING);
+
+            return treeHash;
+
+        } catch (IOException e) {
+            System.out.println("File not found or something like that");
+            return null;
+        }
+
     }
 
 
