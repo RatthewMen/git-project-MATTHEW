@@ -2,12 +2,14 @@
 
 to-do list:
 1. finish 3.x assignments
+2. add comments to code to prep for collab work (4.0 stuff)
 
 How to read
-(Assignment number. part number. stretch challenge) and then the date 
-New methods (with modifier and return type) and their discription
+(Assignment number. Part. stretch challenge) Date 
+Method (with modifier and return type) and their discription
 Date + change log to method
-other misc changes
+
+Changelog at the bottom
 
 Methods:
 
@@ -29,6 +31,7 @@ deleteGit()
 Modifier and type: static void
 a cleanup function to remove all the created directories and files.
     9/25/2025: It removes all the Blobs in objects folder first
+    10/5/2025: moved the deleting index portion into a seperate method and then calls it
 
     #3
 StressTest(int times)
@@ -68,8 +71,9 @@ accepts a filepath ("filePath" variable) instead of a String and then turns the 
     #1
 addToIndex(String filePath, String SHAHash)
 Modifier and type: static void
-adds a BLOB and file entries to the index in the order "Blob, file"
-    10/2/2025: changed adding new entries and appending to putting entries into a Hashmap instead and then printing the Hashmap into the index. 
+adds a BLOB and file entries to the index in the order "Blob fileName"
+    10/2/2025: changed adding new entries and appending to putting entries into a Hashmap instead and then printing the Hashmap into the index. format was changed to (blob <SHA1> <Pathname>)
+    10/5/2025: changed format to (<SHA1> <Pathname>)
 
 2.4.1 (9/26/2025)
     #1
@@ -134,17 +138,32 @@ remakeHashMap()
 Modifier and type: static void
 remakes the Hashmap after the code is ran again. It reads the index and remakes the hashmap so that we can use it for staging or anything else
 
+3.2 (10/5/2025)
+    #1 
+deleteIndex()
+Modifier and type: static void
+deletes the index by deleting all the files first and then the index folder itself
+    #2
+DirectoryTreeGenerator(String directoryPath)
+Modifier and type: static String
+makes a tree from the provided directory. If a file is in the directory then it hashes the file and adds it to a String builder in the format (blob <SHA1> <pathName>). After all files has been hashed, it makes a tree in the objects folder with the hash of all of the contents of the tree and returns it. If there are directories in the provided directory the method recursively calls itself and makes a tree object for the inner and outer directories. The inner directory tree is also added to the outer directory with the format (tree <SHA1> <pathName>).
 
 
 Change Log:
+10/5/2025:
+- GP 3.2:  a method that, given a String directory path:
+1. Generates a tree file containing references to all files and subdirectories
+2. Returns the SHA-1 hash of the generated tree based on its contents
+Blob format (blob <SHA1> <pathName>)
+Tree format (tree <SHA1> <pathName>)
+- updated readme a little bit
 
 10/2/2025:
-- GP 3.1:
-- Split the code into different sections like Hashing, GitDirectory, and RandomFiles to make the codebase more readable
-GitDiectory is all the methods that is used to make the gitfolders
-Hashing is all the methods used for Hashing the blob
-RandomFiles is all the methods for creating and deleting the random files for testing
-Git now just holds all the methods for creating the fake github
+- GP 3.1: Split the code into different sections like Hashing, GitDirectory, and RandomFiles to make the codebase more readable
+GitDiectory.java is all the methods that is used to make the gitfolders
+Hashing.java is all the methods used for Hashing the blob
+RandomFiles.java is all the methods for creating and deleting the random files for testing
+Git.java now just holds all the methods for creating the fake github
 - reorganized and updated ReadMe
 
 9/26/2025:
@@ -158,7 +177,6 @@ method FileMakerChecker checks if the Blob and its respective textfile in the ob
 method randomFilesChecker checks if a file exists in the randomFiles folder
 - GP 2.4.2: method masterRESET deletes all generated files from previous tests and resets git and the rest of the directory to a clean state
 - GP 2.4.3: not a real assignment but it cleans up the ReadMe to be more clear and readable for a person
-
 
 
 9/25/2025
