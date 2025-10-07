@@ -53,14 +53,14 @@ public class GitDirectory {
     }
 
     public static void deleteGit(){
-        deleteIndex();
+        deleteObjects();
         HEAD.delete();
         index.delete();
         objects.delete();
         directory.delete();
     }
 
-    public static void deleteIndex(){
+    public static void deleteObjects(){
         File[] files = objects.listFiles();
         if (files != null) {
             for (File file : files) {

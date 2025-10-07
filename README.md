@@ -140,9 +140,11 @@ remakes the Hashmap after the code is ran again. It reads the index and remakes 
 
 3.2 (10/5/2025)
     #1 
-deleteIndex()
+deleteObjects()
 Modifier and type: static void
-deletes the index by deleting all the files first and then the index folder itself
+deletes the objects by deleting all the files inside the folder
+    10/7/2025: changed from deleteIndex to deleteObjects (wrongly named)
+
     #2
 DirectoryTreeGenerator(String directoryPath)
 Modifier and type: static String
@@ -150,6 +152,10 @@ makes a tree from the provided directory. If a file is in the directory then it 
 
 
 Change Log:
+
+10/7/2025:
+-GP 3.3: gl to reading it cus there is no documentation rn
+
 10/5/2025:
 - GP 3.2:  a method that, given a String directory path:
 1. Generates a tree file containing references to all files and subdirectories
