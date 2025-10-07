@@ -3,12 +3,17 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Handler;
 
 public class Git{
     
     public static HashMap<String, ArrayList<String>> indexMap = new HashMap<>();
     public static boolean hashMapStatus = false;
+    public static File workingList = new File("workingList");
 
     public static void main(String[] args) {
         //makeGitDirectoryAndFiles();
@@ -24,14 +29,18 @@ public class Git{
         //BLOBmaker("/dupefiles/boar.txt");
         //BLOBmaker("boar.txt");
 
-        GitDirectory.masterRESET();
+        //GitDirectory.masterRESET();
         //BLOBmaker("boar.txt");
         
         //multiBLOBMaker(RandomFiles.randomFiles.listFiles());
         //System.out.println("the index map is: " + IndexMaptoString());
         //staging("blob" , "boar.txt");
-        RandomFiles.randomFileMaker(4);
-        DirectoryTreeGenerator(RandomFiles.randomFiles.getPath());
+        //RandomFiles.randomFileMaker(4);
+        // DirectoryTreeGenerator(RandomFiles.randomFiles.getPath());
+        GitDirectory.deleteObjects();
+        //workingList.delete();
+        //workingListMaker();
+        IndexTreeGenerator(workingListMaker());
 
         
     }
@@ -253,6 +262,120 @@ public class Git{
         }
 
     }
+
+    //https://docs.oracle.com/javase/8/docs/api/java/util/Comparator.html
+    //https://www.geeksforgeeks.org/java/java-comparator-interface/ (lambda expressions part)
+    public static ArrayList<String> workingListMaker(){
+        try {
+            if (!workingList.exists()){
+                workingList.createNewFile();
+                //System.out.println("creating file");
+            }
+            if (hashMapStatus == false){
+                remakeHashMap();
+                hashMapStatus = true;
+            }
+            
+            ArrayList<BlobObject> fileObjects = new ArrayList<>();
+            for (Map.Entry<String, ArrayList<String>> entry : indexMap.entrySet()) {
+                String hash = entry.getKey();
+                ArrayList<String> paths = entry.getValue();
+
+                for (String path : paths) {
+                    String[] parts = path.split("\\\\"); //no clue why 4 ngl
+                    String pathName = path;
+                    int depth = parts.length;
+                    String folderName = parts[parts.length - 2];
+                    String fileName = parts[parts.length - 1];
+                
+                    fileObjects.add(new BlobObject("blob",pathName, hash, depth, folderName, fileName));
+                }
+            }
+
+            fileObjects.sort(Comparator.comparingInt(BlobObject::getDepth).reversed().thenComparing(BlobObject::getFolderName).thenComparing(BlobObject::getFileName));
+
+            StringBuilder sb = new StringBuilder();
+            for (BlobObject blob : fileObjects) {
+                sb.append(blob.toString());
+            }
+
+
+            Files.write(workingList.toPath(), sb.toString().getBytes(), StandardOpenOption.TRUNCATE_EXISTING);
+
+            ArrayList<String> wList = new ArrayList<>();
+            wList.addAll(Files.readAllLines(workingList.toPath()));
+
+            return wList;
+        } catch (Exception e) {
+            System.out.println("bruh not working");
+            return null;
+        }
+    }
+
+    public static void sortWorkingList(){
+        
+    }
+    
+
+    public static void IndexTreeGenerator(ArrayList<String> wList){
+        try {
+
+            if (!workingList.exists()) {
+                System.out.println("Working list missing");
+                workingListMaker();
+            }
+
+            if (wList.size() == 1){
+                String rootLine = wList.get(0);
+                String content = rootLine + "\n"; // or whatever content you want inside root tree
+                String rootHash = Hashing.hashString(content.getBytes());
+                File rootFile = new File(GitDirectory.objects.getPath(), rootHash);
+                Files.write(rootFile.toPath(), content.getBytes(), StandardOpenOption.CREATE);
+                return;
+            }
+
+
+            ArrayList<String> subTree = new ArrayList<>();
+            String file = wList.get(0);
+            String path = file.substring(file.lastIndexOf(" ")+1);
+
+            String parts[] = path.split("\\\\");
+            String folderName = parts[parts.length-2];
+
+            for (int i = wList.size()-1; i>=0; i--){
+                String otherFile = wList.get(i);
+                String otherPath = otherFile.substring(otherFile.lastIndexOf(" ") + 1);
+                String[] otherParts = otherPath.split("\\\\");
+                String otherFolderName = otherParts[otherParts.length-2];
+                
+                if (folderName.equals(otherFolderName) && parts.length == otherParts.length) {
+                    subTree.add(otherFile);
+                    wList.remove(i);
+                }
+            }
+
+            StringBuilder subTreeBlobs = new StringBuilder();
+            for (String blobs : subTree) {
+                subTreeBlobs.append(blobs).append("\n");
+            }
+            String treeHash = Hashing.hashString(subTreeBlobs.toString().getBytes());
+            String subTreePath = path.substring(0, path.lastIndexOf("\\"));
+            String treeLine = "tree " + treeHash + " " + subTreePath;
+            wList.add(0, treeLine);
+
+            File subtree = new File(GitDirectory.objects.getPath(), treeHash);
+            //subtree.createNewFile();
+            Files.write(subtree.toPath(), subTreeBlobs.toString().getBytes(), StandardOpenOption.CREATE);
+
+            IndexTreeGenerator(wList);
+        } catch (Exception e) {
+            System.out.println("WorkingList file not found");
+            e.printStackTrace();
+            //return null;
+        }
+
+    }
+        
 
 
 
