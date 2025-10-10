@@ -502,11 +502,11 @@ public class Git {
                     String[] parts = path.split("/"); // no clue why 4 ngl
                     String pathName = path;
                     int depth = parts.length;
-                    String folderName = parts[parts.length - 2];
+                    String parentName = parts[parts.length - 2];
                     String fileName = parts[parts.length - 1];
 
                     fileObjects.add(
-                            new BlobObject("blob", pathName, hash, depth, folderName, fileName));
+                            new BlobObject("blob", pathName, hash, depth, parentName, fileName));
                 }
             }
 
