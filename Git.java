@@ -1,4 +1,7 @@
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
@@ -17,49 +20,252 @@ public class Git {
     // Changed working list to be a File in the objects folder
     public static File workingList = new File("git/objects/workingList");
 
-    public static void main(String[] args) {
-        // makeGitDirectoryAndFiles();
-        // deleteGit();
-        // StressTest(10);
-        // System.out.println(hashString("boar.txt"));
-        // BLOBmaker("boar.txt");
-        // BlobChecker(hashString("boar.txt"));
-        // deleteRandomFileMaker();
-        // randomFileMaker(10);
-        // multiBLOBMaker(randomFiles.listFiles());
-        // FileMakerChecker();
-        // BLOBmaker("/dupefiles/boar.txt");
-        // BLOBmaker("boar.txt");
+    public static void main(String[] args) throws IOException {
 
-        // GitDirectory.masterRESET();
-        // BLOBmaker("boar.txt");
+        // GitDirectory.makeGitDirectoryAndFiles();
+        // makeGitDirectoryAndFilesTester();
 
-        // multiBLOBMaker(RandomFiles.randomFiles.listFiles());
-        // System.out.println("the index map is: " + IndexMaptoString());
-        // staging("blob" , "boar.txt");
-        // RandomFiles.randomFileMaker(4);
-        // DirectoryTreeGenerator(RandomFiles.randomFiles.getPath());
-        GitDirectory.deleteObjects();
-        // workingList.delete();
+        // GitDirectory.deleteObjects();
+        // deleteObjectsTester();
+
+        // GitDirectory.StressTest(5);
+        // StressTestTester(5);
+
+        // Hashing.hashString("hello".getBytes());
+        // hashingTester("hello");
+
+        // Hashing.CompressOrNot("randomFiles/file1.txt");
+        // compressTester("randomFiles/file1.txt");
+
+        // BLOBmaker("randomFiles/file1.txt");
+        // BLOBmakerTester("randomFiles/file1.txt");
+
+        // Blobremover("blob", "randomFiles/file1.txt");
+        // BlobremoverTester("blob", "randomFiles/file1.txt");
+
+        // staging("blob", "randomFiles/file1.txt");
+        // stagingTester("blob", "randomFiles/file1.txt");
+
+        // BlobChecker("someblobname");
+        // BlobCheckerTester("someblobname");
+
+        // removeFromIndex("blob", "randomFiles/file1.txt");
+        // removeFromIndexTester("blob", "randomFiles/file1.txt");
+
+        // addToIndex("randomFiles/file1.txt", "somehash");
+        // addToIndexTester("randomFiles/file1.txt", "somehash");
+
+        // writeToIndex();
+        // writeToIndexTester();
+
+        // IndexMaptoString();
+        // IndexMaptoStringTester();
+
+        // remakeHashMap();
+        // remakeHashMapTester();
+
+        // File[] files = new File[] {new File("randomFiles/file1.txt"),
+        // new File("randomFiles/file2.txt")};
+        // multiBLOBMaker(files);
+        // multiBLOBMakerTester(files);
+
+        // DirectoryTreeGenerator("randomFiles");
+        // DirectoryTreeGeneratorTester("randomFiles");
+
         // workingListMaker();
-        IndexTreeGenerator(workingListMaker());
+        // workingListMakerTester();
+
+        // ArrayList<String> wList = new ArrayList<String>();
+        // wList.add("blob somehash randomFiles/file1.txt");
+        // wList.add("blob somehash2 randomFiles/folder1/file2.txt");
+        // wList.add("tree sometreehash randomFiles/folder1");
+        // wList.add("blob somehash3 randomFiles/folder2/file3.txt");
+        // wList.add("tree sometreehash2 randomFiles/folder2");
+        // wList.add("tree roottreehash randomFiles");
+        // IndexTreeGenerator(wList);
+        // IndexTreeGeneratorTester(wList);
+        GitDirectory.makeGitDirectoryAndFiles();
+        RandomFiles.randomFileMaker(10);
+        BLOBmaker("randomFiles/file1.txt");
+        BLOBmaker("randomFiles/file2.txt");
+        BLOBmaker("randomFiles/file3.txt");
+        BLOBmaker("randomFiles/file4.txt");
+        BLOBmaker("randomFiles/file5.txt");
+        BLOBmaker("randomFiles/file6.txt");
+        BLOBmaker("randomFiles/file7.txt");
+        BLOBmaker("randomFiles/file8.txt");
+        BLOBmaker("randomFiles/file9.txt");
+        BLOBmaker("randomFiles/file10.txt");
+        fileMakerCheckerTester();
 
 
     }
 
+    // fixed the tester to call the right method from right class
+    public static void makeGitDirectoryAndFilesTester() {
+        GitDirectory.makeGitDirectoryAndFiles();
+        if (GitDirectory.directory.exists() && GitDirectory.objects.exists()
+                && GitDirectory.index.exists() && GitDirectory.HEAD.exists()) {
+            System.out.println("Git Directory and Files created successfully");
+        }
+    }
+
+    // fixed the tester to call the right method from right class
+    public static void deleteObjectsTester() {
+        GitDirectory.deleteObjects();
+        if (!GitDirectory.objects.exists()) {
+            System.out.println("Git Objects deleted successfully");
+        }
+    }
+
+    public static void StressTestTester(int times) {
+        GitDirectory.StressTest(times);
+        System.out.println("Did " + times + " cycles of making GIT and deleting it.");
+    }
+
+    public static void hashingTester(String input) {
+        System.out.println(Hashing.hashString(input.getBytes()));
+
+    }
+
+    public static void compressTester(String filePath) {
+        Hashing.CompressOrNot(filePath);
+        if (Hashing.compress == true) {
+            System.out.println("Using Compression");
+        } else {
+            System.out.println("Not Using Compression");
+        }
+    }
+
+    public static void BLOBmakerTester(String filePath) {
+        BLOBmaker(filePath);
+        System.out.println("Made new blob file for: " + filePath);
+    }
+
+    public static void BlobremoverTester(String type, String filePath) {
+        Blobremover(type, filePath);
+        System.out.println("Removed blob file for: " + filePath);
+    }
+
+    public static void stagingTester(String type, String filePath) {
+        staging(type, filePath);
+        System.out.println("Staged " + type + " for: " + filePath);
+    }
+
+    public static void BlobCheckerTester(String blobName) {
+        if (BlobChecker(blobName) == true) {
+            System.out.println("Blob " + blobName + " exists");
+        } else {
+            System.out.println("Blob " + blobName + " does not exist");
+        }
+    }
+
+    public static void removeFromIndexTester(String type, String filePath) {
+        removeFromIndex(type, filePath);
+        System.out.println("Removed " + type + " from index for: " + filePath);
+    }
+
+    public static void addToIndexTester(String filePath, String SHAHash) {
+        addToIndex(filePath, SHAHash);
+        System.out.println("Added blob to index for: " + filePath);
+    }
+
+    public static void writeToIndexTester() {
+        writeToIndex();
+        System.out.println("Wrote to index");
+    }
+
+    public static void IndexMaptoStringTester() {
+        System.out.println(IndexMaptoString());
+    }
+
+    public static void remakeHashMapTester() {
+        remakeHashMap();
+        System.out.println("Remade HashMap from index");
+    }
+
+    public static void multiBLOBMakerTester(File[] files) {
+        multiBLOBMaker(files);
+        System.out.println("Made multiple blobs");
+    }
+
+    public static void DirectoryTreeGeneratorTester(String directoryPath) {
+        DirectoryTreeGenerator(directoryPath);
+        System.out.println("Generated directory tree for: " + directoryPath);
+    }
+
+    public static void workingListMakerTester() {
+        BLOBmaker("randomFiles/file1.txt");
+        BLOBmaker("randomFiles/file2.txt");
+        BLOBmaker("randomFiles/file3.txt");
+        BLOBmaker("randomFiles/file4.txt");
+        BLOBmaker("randomFiles/file5.txt");
+        BLOBmaker("randomFiles/file6.txt");
+        BLOBmaker("randomFiles/file7.txt");
+        BLOBmaker("randomFiles/file8.txt");
+        BLOBmaker("randomFiles/file9.txt");
+        BLOBmaker("randomFiles/file10.txt");
+        workingListMaker();
+        System.out.println("Made working list");
+    }
+
+    public static void IndexTreeGeneratorTester(ArrayList<String> wList) {
+        BLOBmaker("randomFiles/file1.txt");
+        BLOBmaker("randomFiles/file2.txt");
+        BLOBmaker("randomFiles/file3.txt");
+        BLOBmaker("randomFiles/file4.txt");
+        BLOBmaker("randomFiles/file5.txt");
+        BLOBmaker("randomFiles/file6.txt");
+        BLOBmaker("randomFiles/file7.txt");
+        BLOBmaker("randomFiles/file8.txt");
+        BLOBmaker("randomFiles/file9.txt");
+        BLOBmaker("randomFiles/file10.txt");
+        IndexTreeGenerator(wList);
+        System.out.println("Generated index tree");
+    }
+
+    public static void masterRESETTester() {
+        GitDirectory.masterRESET();
+        System.out.println("Reset master");
+    }
+
+    public static void randomFileMakerTester(int numFiles) {
+        RandomFiles.randomFileMaker(numFiles);
+        System.out.println("Made " + numFiles + " random files");
+    }
+
+    public static void deleteRandomFileMakerTester() {
+        RandomFiles.deleteRandomFileMaker();
+        System.out.println("Deleted random files");
+    }
+
+    public static void fileMakerCheckerTester() {
+        if (RandomFiles.FileMakerChecker() == true) {
+            System.out.println("All blobs in index exist");
+        } else {
+            System.out.println("Some blobs in index do not exist");
+        }
+    }
+
+    public static void randomFilesCheckerTester(String fileName) {
+        if (RandomFiles.randomFilesChecker(fileName) == true) {
+            System.out.println("File " + fileName + " exists in randomFiles");
+        } else {
+            System.out.println("File " + fileName + " does not exist in randomFiles");
+        }
+    }
+
+
 
     public static void BLOBmaker(String filePath) {
         String SHAHash = Hashing.CompressOrNot(filePath);
-
         // System.out.println("HASH: " + SHAHash);
-
         File Blob = new File(GitDirectory.objects, SHAHash);
         try {
             Blob.createNewFile();
         } catch (Exception e) {
             System.out.println("Can't create file: " + Blob.toPath());
         }
-
         addToIndex(filePath, SHAHash);
 
 
@@ -293,7 +499,7 @@ public class Git {
                 ArrayList<String> paths = entry.getValue();
 
                 for (String path : paths) {
-                    String[] parts = path.split("\\\\"); // no clue why 4 ngl
+                    String[] parts = path.split("/"); // no clue why 4 ngl
                     String pathName = path;
                     int depth = parts.length;
                     String folderName = parts[parts.length - 2];
@@ -305,8 +511,8 @@ public class Git {
             }
 
             fileObjects.sort(Comparator.comparingInt(BlobObject::getDepth).reversed()
-                    .thenComparing(BlobObject::getFolderName)
-                    .thenComparing(BlobObject::getFileName));
+                    .thenComparing(BlobObject::getFileName)
+                    .thenComparing(BlobObject::getFolderName));
 
             StringBuilder sb = new StringBuilder();
             for (BlobObject blob : fileObjects) {
@@ -387,7 +593,7 @@ public class Git {
 
             if (wList.size() == 1) {
                 String rootLine = wList.get(0);
-                String content = rootLine + "\n"; // or whatever content you want inside root tree
+                String content = rootLine; // or whatever content you want inside root tree
                 String rootHash = Hashing.hashString(content.getBytes());
                 File rootFile = new File(GitDirectory.objects.getPath(), rootHash);
                 Files.write(rootFile.toPath(), content.getBytes(), StandardOpenOption.CREATE);
@@ -398,16 +604,26 @@ public class Git {
             // Makes sure the working list is properly sorted before processing
             sortSlashCountDescend(wList);
             ArrayList<String> subTree = new ArrayList<>();
+            if (wList.size() == 0) {
+                System.out.println("Working list empty");
+                return;
+            }
             String file = wList.get(0);
             String path = file.substring(file.lastIndexOf(" ") + 1);
 
-            String parts[] = path.split("\\\\");
+            String parts[] = path.split("/");
+            if (parts.length < 2) {
+                if (parts.length < 2) {
+                    System.out.println("No more subtrees can be made");
+                    return;
+                }
+            }
             String folderName = parts[parts.length - 2];
 
             for (int i = wList.size() - 1; i >= 0; i--) {
                 String otherFile = wList.get(i);
                 String otherPath = otherFile.substring(otherFile.lastIndexOf(" ") + 1);
-                String[] otherParts = otherPath.split("\\\\");
+                String[] otherParts = otherPath.split("/");
                 String otherFolderName = otherParts[otherParts.length - 2];
 
                 if (folderName.equals(otherFolderName) && parts.length == otherParts.length) {
@@ -421,16 +637,21 @@ public class Git {
                 subTreeBlobs.append(blobs).append("\n");
             }
             String treeHash = Hashing.hashString(subTreeBlobs.toString().getBytes());
-            String subTreePath = path.substring(0, path.lastIndexOf("\\"));
+            int lastSlash = path.lastIndexOf('/');
+            String subTreePath = path.substring(0, lastSlash);
             String treeLine = "tree " + treeHash + " " + subTreePath;
             wList.add(0, treeLine);
-
+            sortSlashCountDescend(wList);
             File subtree = new File(GitDirectory.objects.getPath(), treeHash);
             // subtree.createNewFile();
             Files.write(subtree.toPath(), subTreeBlobs.toString().getBytes(),
                     StandardOpenOption.CREATE);
             // Writes to the working list file to keep it updated. It did not do this before.
-            Files.write(Paths.get("git/objects/workingList"), wList, StandardCharsets.UTF_8);
+            if (wList.get(wList.size() - 1).substring(wList.get(wList.size() - 1).length() - 1)
+                    .equals("\n"))
+                wList.set(wList.size() - 1, wList.get(wList.size() - 1).substring(0,
+                        wList.get(wList.size() - 1).length() - 1));
+            Files.write(workingList.toPath(), wList, StandardCharsets.UTF_8);
             IndexTreeGenerator(wList);
         } catch (Exception e) {
             System.out.println("WorkingList file not found");

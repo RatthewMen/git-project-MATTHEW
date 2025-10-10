@@ -12,6 +12,19 @@ Date + change log to method
 
 Changelog at the bottom
 
+4.1 (10/9/2025)
+
+The method didn't properly sort the list of lines of blobs and trees before using it. Now, the lines with the most slashes are at the top and it alphabetically sorts downward. Also, the working list isn't updated throughout every use of the method void IndexTreeGenerator(ArrayList<String> wList). The working list wasn't in the objects folder of git. Some of the code wasn't very clear and redundant. The README wasn't updated. The tester called on the wrong classes for some methods. The tester was lacking some methods that it should've tested. I tested all the methods in the Git class too. 
+
+int slashCount(String line):
+This method returns the number of slashes present in the relative path of a tree or blob. It is called in createIndexTree() and createIndexTreeHelper() and is useful for sorting based on most slashes first in the working list. it returns the number of slashes in a relative path.
+
+String pathLine(String line):
+This method returns the relative path of a blob or tree by parsing the line into three different parts. The last part is the relative path, which it returns. This is useful for the sortSlashCountDescend(List lines) method, as it helps organize the order of the lines. It returns the relative path of a blob or tree.
+
+void sortSlashCountDescend(List lines):
+This method organizes a list of lines based on the number of slashes and alphabetically for the relative path of a tree or blob. It puts the blobs or trees with the most slashes at the front, alphabatizing the order in case some have the same number of slashes. This is useful in the createIndexTree() and createIndexTreeHelper() methods to keep the working list organized and updated.
+
 Methods:
 
 2.1 (9/24/2025)
@@ -163,18 +176,6 @@ DirectoryTreeGenerator(String directoryPath)
 Modifier and type: static String
 makes a tree from the provided directory. If a file is in the directory then it hashes the file and adds it to a String builder in the format (blob <SHA1> <pathName>). After all files has been hashed, it makes a tree in the objects folder with the hash of all of the contents of the tree and returns it. If there are directories in the provided directory the method recursively calls itself and makes a tree object for the inner and outer directories. The inner directory tree is also added to the outer directory with the format (tree <SHA1> <pathName>).
 
-4.1 (10/9/2025)
-
-The method didn't properly sort the list of lines of blobs and trees before using it. Now, the lines with the most slashes are at the top and it alphabetically sorts downward. Also, the working list isn't updated throughout every use of the method void IndexTreeGenerator(ArrayList<String> wList). The working list wasn't in the objects folder of git. Some of the code wasn't very clear and redundant.
-
-int slashCount(String line):
-This method returns the number of slashes present in the relative path of a tree or blob. It is called in createIndexTree() and createIndexTreeHelper() and is useful for sorting based on most slashes first in the working list. it returns the number of slashes in a relative path.
-
-String pathLine(String line):
-This method returns the relative path of a blob or tree by parsing the line into three different parts. The last part is the relative path, which it returns. This is useful for the sortSlashCountDescend(List lines) method, as it helps organize the order of the lines. It returns the relative path of a blob or tree.
-
-void sortSlashCountDescend(List lines):
-This method organizes a list of lines based on the number of slashes and alphabetically for the relative path of a tree or blob. It puts the blobs or trees with the most slashes at the front, alphabatizing the order in case some have the same number of slashes. This is useful in the createIndexTree() and createIndexTreeHelper() methods to keep the working list organized and updated.
 
 Change Log:
 
