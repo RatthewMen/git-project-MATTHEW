@@ -1,6 +1,7 @@
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -8,7 +9,9 @@ import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Handler;
@@ -17,6 +20,7 @@ public class Git {
 
     public static HashMap<String, ArrayList<String>> indexMap = new HashMap<>();
     public static boolean hashMapStatus = false;
+    public static LinkedList<CommitNode> commitHistory = new LinkedList<>();
     // Changed working list to be a File in the objects folder
     public static File workingList = new File("git/objects/workingList");
 
@@ -84,19 +88,23 @@ public class Git {
         // wList.add("tree roottreehash randomFiles");
         // IndexTreeGenerator(wList);
         // IndexTreeGeneratorTester(wList);
-        GitDirectory.makeGitDirectoryAndFiles();
-        RandomFiles.randomFileMaker(10);
-        BLOBmaker("randomFiles/file1.txt");
-        BLOBmaker("randomFiles/file2.txt");
-        BLOBmaker("randomFiles/file3.txt");
-        BLOBmaker("randomFiles/file4.txt");
-        BLOBmaker("randomFiles/file5.txt");
-        BLOBmaker("randomFiles/file6.txt");
-        BLOBmaker("randomFiles/file7.txt");
-        BLOBmaker("randomFiles/file8.txt");
-        BLOBmaker("randomFiles/file9.txt");
-        BLOBmaker("randomFiles/file10.txt");
-        fileMakerCheckerTester();
+        // GitDirectory.makeGitDirectoryAndFiles();
+        // RandomFiles.randomFileMaker(10);
+        // BLOBmaker("randomFiles/file1.txt");
+        // BLOBmaker("randomFiles/file2.txt");
+        // BLOBmaker("randomFiles/file3.txt");
+        // BLOBmaker("randomFiles/file4.txt");
+        // BLOBmaker("randomFiles/file5.txt");
+        // BLOBmaker("randomFiles/file6.txt");
+        // BLOBmaker("randomFiles/file7.txt");
+        // BLOBmaker("randomFiles/file8.txt");
+        // BLOBmaker("randomFiles/file9.txt");
+        // BLOBmaker("randomFiles/file10.txt");
+        // fileMakerCheckerTester();
+
+        commitTester("Cooper Ren", "This commit will work");
+        commitTester("Jeff", "This commit will work");
+        printCommitHistory();
 
 
     }
@@ -195,6 +203,7 @@ public class Git {
     }
 
     public static void workingListMakerTester() {
+        RandomFiles.randomFileMaker(10);
         BLOBmaker("randomFiles/file1.txt");
         BLOBmaker("randomFiles/file2.txt");
         BLOBmaker("randomFiles/file3.txt");
@@ -210,6 +219,7 @@ public class Git {
     }
 
     public static void IndexTreeGeneratorTester(ArrayList<String> wList) {
+        RandomFiles.randomFileMaker(10);
         BLOBmaker("randomFiles/file1.txt");
         BLOBmaker("randomFiles/file2.txt");
         BLOBmaker("randomFiles/file3.txt");
@@ -222,6 +232,32 @@ public class Git {
         BLOBmaker("randomFiles/file10.txt");
         IndexTreeGenerator(wList);
         System.out.println("Generated index tree");
+    }
+
+    public static void commitTester(String author, String message) throws IOException {
+        RandomFiles.randomFileMaker(10);
+        BLOBmaker("randomFiles/file1.txt");
+        BLOBmaker("randomFiles/file2.txt");
+        BLOBmaker("randomFiles/file3.txt");
+        BLOBmaker("randomFiles/file4.txt");
+        BLOBmaker("randomFiles/file5.txt");
+        BLOBmaker("randomFiles/file6.txt");
+        BLOBmaker("randomFiles/file7.txt");
+        BLOBmaker("randomFiles/file8.txt");
+        BLOBmaker("randomFiles/file9.txt");
+        BLOBmaker("randomFiles/file10.txt");
+        commit(author, message);
+    }
+
+    public static void printCommitHistory() {
+        System.out.println("Commit History:");
+        for (CommitNode c : commitHistory) {
+            System.out.println("Commit: " + c.commitHash);
+            System.out.println("Parent: " + c.parentHash);
+            System.out.println("Tree: " + c.treeHash);
+            System.out.println("Author: " + c.author);
+            System.out.println("Message: " + c.message);
+        }
     }
 
     public static void masterRESETTester() {
@@ -347,6 +383,8 @@ public class Git {
         return false;
     }
 
+    // added unlikely-arg-type suppression to avoid warning
+    @SuppressWarnings("unlikely-arg-type")
     public static void removeFromIndex(String type, String filePath) {
         String abspath = Paths.get(filePath).toAbsolutePath().toString();
         String path = abspath.substring(abspath.indexOf("git"));
@@ -410,6 +448,8 @@ public class Git {
 
     public static void remakeHashMap() {
         try {
+            // without this line, there was duplicate entries in the hashmap
+            indexMap.clear();
             for (String line : Files.readAllLines(GitDirectory.index.toPath(),
                     StandardCharsets.UTF_8)) {
                 String[] parts = line.split(" ", 2);
@@ -583,7 +623,7 @@ public class Git {
     }
 
 
-    public static void IndexTreeGenerator(ArrayList<String> wList) {
+    public static String IndexTreeGenerator(ArrayList<String> wList) {
         try {
 
             if (!workingList.exists()) {
@@ -595,9 +635,9 @@ public class Git {
                 String rootLine = wList.get(0);
                 String content = rootLine; // or whatever content you want inside root tree
                 String rootHash = Hashing.hashString(content.getBytes());
-                File rootFile = new File(GitDirectory.objects.getPath(), rootHash);
-                Files.write(rootFile.toPath(), content.getBytes(), StandardOpenOption.CREATE);
-                return;
+                // File rootFile = new File(GitDirectory.objects.getPath(), rootHash);
+                // Files.write(rootFile.toPath(), content.getBytes(), StandardOpenOption.CREATE);
+                return rootHash;
             }
             // properly helped create a sorter helper method with two other helper methods
             // to sort the working list by slash count descending and then by path alphabetically
@@ -606,7 +646,7 @@ public class Git {
             ArrayList<String> subTree = new ArrayList<>();
             if (wList.size() == 0) {
                 System.out.println("Working list empty");
-                return;
+                return null;
             }
             String file = wList.get(0);
             String path = file.substring(file.lastIndexOf(" ") + 1);
@@ -615,7 +655,6 @@ public class Git {
             if (parts.length < 2) {
                 if (parts.length < 2) {
                     System.out.println("No more subtrees can be made");
-                    return;
                 }
             }
             String folderName = parts[parts.length - 2];
@@ -653,14 +692,99 @@ public class Git {
                         wList.get(wList.size() - 1).length() - 1));
             Files.write(workingList.toPath(), wList, StandardCharsets.UTF_8);
             IndexTreeGenerator(wList);
+            return treeHash;
         } catch (Exception e) {
-            System.out.println("WorkingList file not found");
+            System.out.println("Working List file not found");
             e.printStackTrace();
-            // return null;
+            return null;
         }
 
     }
 
+    public static String commit(String author, String message) throws IOException {
+        StringBuilder parentContent = new StringBuilder();
+        String line = "";
+        Date date = new Date();
+        String treeHash = IndexTreeGenerator(workingListMaker());
+        BufferedReader br = new BufferedReader(new FileReader(GitDirectory.HEAD));
+        while ((line = br.readLine()) != null) {
+            parentContent.append(line);
+        }
+        br.close();
+        String head = parentContent.toString();
+        StringBuilder commitContent = new StringBuilder();
+        commitContent.append("tree: " + treeHash + "\n");
+        if (head.length() > 0) {
+            commitContent.append("parent: " + head + "\n");
+        }
+        commitContent.append("author: " + author + "\n");
+        commitContent.append("date: " + date + "\n");
+        commitContent.append("summary: " + message);
+        if (head.length() > 0) {
+            GitDirectory.HEAD.delete();
+            GitDirectory.HEAD.createNewFile();
+        }
+        byte[] bytes = commitContent.toString().getBytes(StandardCharsets.UTF_8);
+        String name = Hashing.hashString(bytes);
+        Files.write(GitDirectory.HEAD.toPath(), name.getBytes(), StandardOpenOption.CREATE,
+                StandardOpenOption.TRUNCATE_EXISTING);
+        Files.write(new File(GitDirectory.objects, name).toPath(), bytes,
+                StandardOpenOption.CREATE);
+        CommitNode parentNode = null;
+        if (!commitHistory.isEmpty()) {
+            parentNode = commitHistory.getLast();
+        }
+        CommitNode newCommit =
+                new CommitNode(name, head, treeHash, author, message, date, parentNode);
+        commitHistory.add(newCommit);
+        return name;
 
+    }
 
+    public static HashMap<String, String> readCommit(String commitHash) throws IOException {
+        File commitFile = new File(GitDirectory.objects, commitHash);
+        HashMap<String, String> commitData = new HashMap<>();
+        if (!commitFile.exists()) {
+            throw new FileNotFoundException(commitHash + " does not exist");
+        }
+        List<String> lines = Files.readAllLines(commitFile.toPath(), StandardCharsets.UTF_8);
+        for (String line : lines) {
+            if (line.contains(": ")) {
+                String[] parts = line.split(": ", 2);
+                commitData.put(parts[0], parts[1]);
+            }
+        }
+        return commitData;
+    }
+
+    public static void restoreTree(String treeHash, File directory) throws IOException {
+        File treeFile = new File(GitDirectory.objects, treeHash);
+        if (!treeFile.exists()) {
+            throw new FileNotFoundException("Tree not found: " + treeHash);
+        }
+        List<String> lines = Files.readAllLines(treeFile.toPath(), StandardCharsets.UTF_8);
+        for (String line : lines) {
+            String[] parts = line.split(" ");
+            String type = parts[0];
+            String hash = parts[1];
+            String name = parts[2];
+            if (type.equals("blob")) {
+                byte[] content = Files.readAllBytes(new File(GitDirectory.objects, hash).toPath());
+                Files.write(new File(directory, name).toPath(), content);
+            } else if (type.equals("tree")) {
+                File subDir = new File(directory, name);
+                subDir.mkdirs();
+                restoreTree(hash, subDir);
+            }
+        }
+    }
+
+    public static void deleteRecursively(File file) {
+        if (file.isDirectory()) {
+            for (File sub : file.listFiles()) {
+                deleteRecursively(sub);
+            }
+        }
+        file.delete();
+    }
 }

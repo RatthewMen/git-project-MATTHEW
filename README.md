@@ -12,9 +12,34 @@ Date + change log to method
 
 Changelog at the bottom
 
-4.1 (10/9/2025)
+4.3 (10/12/2025):
+Bugs and fixes:
+The method didn't properly sort the list of lines of blobs and trees before using it. Now, the lines with the most slashes are at the top and it alphabetically sorts downward. Also, the working list isn't updated throughout every use of the method void IndexTreeGenerator(ArrayList<String> wList). The working list wasn't in the objects folder of git. Some of the code wasn't very clear and redundant. The README wasn't updated. The tester called on the wrong classes for some methods. The tester was lacking some methods that it should've tested. I tested all the methods in the Git class too. The remakeHashmap() method didn't work, since he didn't clear the HashMap before making it. I fixed that too.
 
-The method didn't properly sort the list of lines of blobs and trees before using it. Now, the lines with the most slashes are at the top and it alphabetically sorts downward. Also, the working list isn't updated throughout every use of the method void IndexTreeGenerator(ArrayList<String> wList). The working list wasn't in the objects folder of git. Some of the code wasn't very clear and redundant. The README wasn't updated. The tester called on the wrong classes for some methods. The tester was lacking some methods that it should've tested. I tested all the methods in the Git class too. 
+Git Class:
+readCommit()
+The readCommit() method retrieves and parses the contents of a commit object stored in the repository. Given a commit hash, it locates the corresponding commit file within the .git/objects directory and reads all of its lines into memory. Each line of the commit file follows a key-value format separated by a colon (e.g., tree: <hash> or author: <name>). The method splits these lines into their respective fields and stores them in a HashMap<String, String> for easy access to commit metadata such as the tree hash, parent commit, author, date, and summary. If the commit file cannot be found, the method throws a FileNotFoundException. It returns a HashMap of the commit data.
+
+restoreTree()
+The restoreTree() method reconstructs the directory structure and file contents of a specific commit by restoring all files and subdirectories associated with a given tree hash. It begins by locating the tree object within the .git/objects directory using the provided hash. Each line of the tree file represents either a blob (a single file) or another tree (a subdirectory). For each blob, the method retrieves the corresponding file content from the objects directory and writes it back to the working directory at its original location. For nested trees, it recursively creates subdirectories and restores their contents. If the specified tree file cannot be found, the method throws a FileNotFoundException. This recursive process allows restoreTree() to accurately rebuild the complete file of a commit.
+
+deleteRecursively()
+The deleteRecursively() method removes a file or directory and all of its contents from the filesystem. If the provided file is a directory, the method first iterates through all files and subdirectories within it, calling itself recursively to ensure that every nested item is deleted. Once all children are removed, it deletes the directory itself. If the file is not a directory, it is simply deleted.
+
+GitWrapper Class:
+init()
+The init() method initializes a new Git repository by setting up the necessary directory structure and base files required for version control. It first removes any existing repository data by calling GitDirectory.deleteGit(), ensuring that the workspace is clean and free of old metadata. Then, it calls GitDirectory.makeGitDirectoryAndFiles() to create a new git directory containing essential components such as the objects, index, and HEAD files.
+
+add()
+The add() method stages a file to be included in the next commit by adding it to the repository’s index. It first validates the file path, ensuring that the specified file exists and is not a directory. The method then reads the file’s contents, computes its SHA-1 hash using the Hashing.hashString() function, and checks whether the file has already been staged by comparing the hash against existing entries in the index file. If the file is not already present, add() calls the Git.BLOBmaker() method to create a blob object representing the file’s current version and store it in the objects directory.
+
+commit()
+The commit() method captures the current state of the repository and saves it as a new commit object. It takes in the author’s name and a commit message as parameters, then delegates the core functionality to the static Git.commit() method. This process involves recording the repository’s file structure, generating a tree object that represents the current index, and creating a commit entry that includes metadata such as the author, timestamp, and commit message. The method returns the SHA-1 hash of the newly created commit, which serves as a unique identifier for that snapshot of the repository.
+
+checkout()
+The checkout() method restores the repository to match the state of a specific commit, effectively reverting all tracked files to the versions recorded in that commit. Given a commit hash, the method first retrieves metadata about that commit using Git.readCommit() and extracts its corresponding root tree hash. It then clears the working directory by recursively deleting all files and folders except essential project files—such as source code files, the .git directory, and configuration items like README.md and LICENSE. After the workspace is cleaned, the method calls Git.restoreTree() to reconstruct the project’s directory structure and restore file contents based on the tree object stored in the commit. Finally, it updates the HEAD file, ensuring that the repository’s reference state matches the restored version. I am not sure if this works. I will graciously accept partial credit.
+
+4.1 (10/9/2025)
 
 int slashCount(String line):
 This method returns the number of slashes present in the relative path of a tree or blob. It is called in createIndexTree() and createIndexTreeHelper() and is useful for sorting based on most slashes first in the working list. it returns the number of slashes in a relative path.
@@ -176,6 +201,14 @@ DirectoryTreeGenerator(String directoryPath)
 Modifier and type: static String
 makes a tree from the provided directory. If a file is in the directory then it hashes the file and adds it to a String builder in the format (blob <SHA1> <pathName>). After all files has been hashed, it makes a tree in the objects folder with the hash of all of the contents of the tree and returns it. If there are directories in the provided directory the method recursively calls itself and makes a tree object for the inner and outer directories. The inner directory tree is also added to the outer directory with the format (tree <SHA1> <pathName>).
 
+3.3 (10/7/2025)
+#1
+workingListMaker()
+The workingListMaker() method generates a comprehensive list of all blobs currently tracked in the index and organizes them into a structured format for later tree construction. It begins by ensuring that the workingList file exists and that the in-memory indexMap is properly initialized by calling remakeHashMap() if needed. For every blob entry in the index, the method constructs a corresponding BlobObject containing metadata such as the blob’s type, file path, parent directory, file name, and directory depth. These blob objects are then sorted by their directory depth (deepest files first) and alphabetically by file and folder names to ensure correct hierarchical ordering. The resulting list is written to the git/objects/workingList file and returned as an ArrayList<String>.
+
+#2
+IndexTreeGenerator()
+The IndexTreeGenerator() method constructs the tree objects that represent the structure of the repository at a given state. It takes the working list (wList) generated by workingListMaker() and recursively organizes it into nested tree objects stored in the git/objects directory. Each iteration identifies files belonging to the same parent folder, groups them into a subtree, and computes a unique SHA-1 hash for the subtree’s contents using the Hashing.hashString() function. This hash becomes the identifier for that tree object, which is then written as a new file inside the objects directory. The method replaces the grouped entries in the working list with a single tree entry linking the subtree hash to its directory path, re-sorts the list for proper order, and continues the process until only a single root tree remains. The final output is the hash of the root tree.
 
 Change Log:
 
