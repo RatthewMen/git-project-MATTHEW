@@ -443,7 +443,8 @@ public class Git {
             }
         }
         // System.out.println(sb.toString());
-        return sb.toString();
+        // Removed the extra newline at the end to prevent issues
+        return sb.toString().substring(0, sb.length() - 1);
     }
 
     public static void remakeHashMap() {
