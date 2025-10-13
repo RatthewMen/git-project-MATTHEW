@@ -18,7 +18,7 @@ import java.util.logging.Handler;
 
 public class Git {
 
-    public static HashMap<String, ArrayList<String>> indexMap = new HashMap<>();
+    public static HashMap<ArrayList<String>, String> indexMap = new HashMap<>();
     public static boolean hashMapStatus = false;
     public static LinkedList<CommitNode> commitHistory = new LinkedList<>();
     // Changed working list to be a File in the objects folder
@@ -331,10 +331,10 @@ public class Git {
         String oldHash = null;
         // System.out.println("the path is: " + path);
 
-        for (HashMap.Entry<String, ArrayList<String>> entry : indexMap.entrySet()) {
-            ArrayList<String> paths = entry.getValue();
+        for (HashMap.Entry<ArrayList<String>, String> entry : indexMap.entrySet()) {
+            ArrayList<String> paths = entry.getKey();
             if (paths.contains(path)) {
-                oldHash = entry.getKey().substring(entry.getKey().indexOf(" ") + 1);
+                oldHash = entry.getValue().substring(entry.getValue().indexOf(" ") + 1);
                 break;
             }
         }
@@ -391,8 +391,8 @@ public class Git {
 
         // String name = Paths.get(filePath).getFileName().toString();
         // removes from hashmap
-        for (HashMap.Entry<String, ArrayList<String>> entry : indexMap.entrySet()) {
-            ArrayList<String> paths = entry.getValue();
+        for (HashMap.Entry<ArrayList<String>, String> entry : indexMap.entrySet()) {
+            ArrayList<String> paths = entry.getKey();
             if (paths.contains(path)) {
                 paths.remove(path);
                 if (paths.isEmpty() == true) {
@@ -411,16 +411,12 @@ public class Git {
 
         ArrayList<String> pathsOfHash = new ArrayList<String>();
         // this is wrong
-        if (indexMap.get(SHAHash) != null) {
-            pathsOfHash = indexMap.get(SHAHash);
+        // if (indexMap.get(SHAHash) != null) {
+        // pathsOfHash = indexMap.get(SHAHash);
 
-        }
+        // }
         pathsOfHash.add(path);
-        if (indexMap.containsValue(pathsOfHash)) {
-            staging("blob", pathsOfHash.get(0));
-        }
-
-        indexMap.put(SHAHash, pathsOfHash);
+        indexMap.put(pathsOfHash, SHAHash);
 
         writeToIndex();
     }
@@ -438,9 +434,9 @@ public class Git {
     public static String IndexMaptoString() {
         StringBuilder sb = new StringBuilder();
 
-        for (HashMap.Entry<String, ArrayList<String>> entry : indexMap.entrySet()) {
-            String key = entry.getKey();
-            ArrayList<String> paths = entry.getValue();
+        for (HashMap.Entry<ArrayList<String>, String> entry : indexMap.entrySet()) {
+            String key = entry.getValue();
+            ArrayList<String> paths = entry.getKey();
 
             for (String path : paths) {
                 sb.append(key).append(" ").append(path).append("\n");
@@ -460,9 +456,9 @@ public class Git {
                 String key = parts[0];
                 String path = parts[1];
 
-                ArrayList<String> paths = indexMap.getOrDefault(key, new ArrayList<>());
+                ArrayList<String> paths = new ArrayList<>();
                 paths.add(path);
-                indexMap.put(key, paths);
+                indexMap.put(paths, key);
             }
         } catch (Exception e) {
             System.out.println("Failed to load index");
@@ -538,9 +534,9 @@ public class Git {
             }
 
             ArrayList<BlobObject> fileObjects = new ArrayList<>();
-            for (Map.Entry<String, ArrayList<String>> entry : indexMap.entrySet()) {
-                String hash = entry.getKey();
-                ArrayList<String> paths = entry.getValue();
+            for (Map.Entry<ArrayList<String>, String> entry : indexMap.entrySet()) {
+                String hash = entry.getValue();
+                ArrayList<String> paths = entry.getKey();
 
                 for (String path : paths) {
                     String[] parts = path.split("/");
