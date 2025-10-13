@@ -87,7 +87,7 @@ public class Git {
         // wList.add("tree sometreehash2 randomFiles/folder2");
         // wList.add("tree roottreehash randomFiles");
         // IndexTreeGenerator(wList);
-        // IndexTreeGeneratorTester(wList);
+        IndexTreeGeneratorTester();
         // GitDirectory.makeGitDirectoryAndFiles();
         // RandomFiles.randomFileMaker(10);
         // BLOBmaker("randomFiles/file1.txt");
@@ -102,9 +102,9 @@ public class Git {
         // BLOBmaker("randomFiles/file10.txt");
         // fileMakerCheckerTester();
 
-        commitTester("Cooper Ren", "This commit will work");
-        commitTester("Jeff", "This commit will work");
-        printCommitHistory();
+        // commitTester("Cooper Ren", "This commit will work");
+        // commitTester("Jeff", "This commit will work");
+        // printCommitHistory();
 
 
     }
@@ -218,7 +218,7 @@ public class Git {
         System.out.println("Made working list");
     }
 
-    public static void IndexTreeGeneratorTester(ArrayList<String> wList) {
+    public static void IndexTreeGeneratorTester() {
         RandomFiles.randomFileMaker(10);
         BLOBmaker("randomFiles/file1.txt");
         BLOBmaker("randomFiles/file2.txt");
@@ -230,7 +230,7 @@ public class Git {
         BLOBmaker("randomFiles/file8.txt");
         BLOBmaker("randomFiles/file9.txt");
         BLOBmaker("randomFiles/file10.txt");
-        IndexTreeGenerator(wList);
+        IndexTreeGenerator(workingListMaker());
         System.out.println("Generated index tree");
     }
 
