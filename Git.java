@@ -25,7 +25,7 @@ public class Git {
     public static File workingList = new File("git/objects/workingList");
 
     public static void main(String[] args) throws IOException {
-        // GitDirectory.masterRESET();
+        GitDirectory.masterRESET();
         // GitDirectory.makeGitDirectoryAndFiles();
         // makeGitDirectoryAndFilesTester();
 
@@ -86,8 +86,8 @@ public class Git {
         // wList.add("blob somehash3 randomFiles/folder2/file3.txt");
         // wList.add("tree sometreehash2 randomFiles/folder2");
         // wList.add("tree roottreehash randomFiles");
-        // IndexTreeGenerator(wList);
-        IndexTreeGeneratorTester();
+
+        // IndexTreeGeneratorTester();
         // GitDirectory.makeGitDirectoryAndFiles();
         // RandomFiles.randomFileMaker(10);
         // BLOBmaker("randomFiles/file1.txt");
@@ -102,9 +102,9 @@ public class Git {
         // BLOBmaker("randomFiles/file10.txt");
         // fileMakerCheckerTester();
 
-        // commitTester("Cooper Ren", "This commit will work");
-        // commitTester("Jeff", "This commit will work");
-        // printCommitHistory();
+        commitTester("Cooper Ren", "This commit will work");
+        commitTester("Jeff", "This commit will work");
+        printCommitHistory();
 
 
     }
@@ -410,12 +410,16 @@ public class Git {
         String path = abspath.substring(abspath.indexOf("git"));
 
         ArrayList<String> pathsOfHash = new ArrayList<String>();
+        // this is wrong
         if (indexMap.get(SHAHash) != null) {
             pathsOfHash = indexMap.get(SHAHash);
 
         }
-
         pathsOfHash.add(path);
+        if (indexMap.containsValue(pathsOfHash)) {
+            staging("blob", pathsOfHash.get(0));
+        }
+
         indexMap.put(SHAHash, pathsOfHash);
 
         writeToIndex();
@@ -539,7 +543,7 @@ public class Git {
                 ArrayList<String> paths = entry.getValue();
 
                 for (String path : paths) {
-                    String[] parts = path.split("/"); // no clue why 4 ngl
+                    String[] parts = path.split("/");
                     String pathName = path;
                     int depth = parts.length;
                     String parentName = parts[parts.length - 2];
@@ -674,6 +678,7 @@ public class Git {
             StringBuilder subTreeBlobs = new StringBuilder();
             for (String blobs : subTree) {
                 subTreeBlobs.append(blobs).append("\n");
+                // fix this later
             }
             String treeHash = Hashing.hashString(subTreeBlobs.toString().getBytes());
             int lastSlash = path.lastIndexOf('/');
@@ -713,13 +718,19 @@ public class Git {
         br.close();
         String head = parentContent.toString();
         StringBuilder commitContent = new StringBuilder();
-        commitContent.append("tree: " + treeHash + "\n");
         if (head.length() > 0) {
+            commitContent.append("tree: " + treeHash + "\n");
             commitContent.append("parent: " + head + "\n");
+            commitContent.append("author: " + author + "\n");
+            commitContent.append("date: " + date + "\n");
+            commitContent.append("message: " + message);
+        } else {
+            commitContent.append("tree: " + treeHash + "\n");
+            commitContent.append("parent: " + "\n");
+            commitContent.append("author: " + author + "\n");
+            commitContent.append("date: " + date + "\n");
+            commitContent.append("message: " + message);
         }
-        commitContent.append("author: " + author + "\n");
-        commitContent.append("date: " + date + "\n");
-        commitContent.append("summary: " + message);
         if (head.length() > 0) {
             GitDirectory.HEAD.delete();
             GitDirectory.HEAD.createNewFile();
@@ -772,9 +783,9 @@ public class Git {
                 byte[] content = Files.readAllBytes(new File(GitDirectory.objects, hash).toPath());
                 Files.write(new File(directory, name).toPath(), content);
             } else if (type.equals("tree")) {
-                File subDir = new File(directory, name);
-                subDir.mkdirs();
-                restoreTree(hash, subDir);
+                File subDirectory = new File(directory, name);
+                subDirectory.mkdirs();
+                restoreTree(hash, subDirectory);
             }
         }
     }

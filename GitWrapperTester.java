@@ -7,7 +7,7 @@ public class GitWrapperTester {
 
         /* Your tester code goes here */
         GitWrapper gw = new GitWrapper();
-        gw.init();
+        // gw.init();
         File sample = new File("sampleDirectory");
         sample.mkdir();
         File hello = new File("sampleDirectory/hello.txt");
