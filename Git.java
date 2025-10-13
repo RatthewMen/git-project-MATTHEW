@@ -87,7 +87,7 @@ public class Git {
         // wList.add("tree sometreehash2 randomFiles/folder2");
         // wList.add("tree roottreehash randomFiles");
 
-        // IndexTreeGeneratorTester();
+        IndexTreeGeneratorTester();
         // GitDirectory.makeGitDirectoryAndFiles();
         // RandomFiles.randomFileMaker(10);
         // BLOBmaker("randomFiles/file1.txt");
@@ -102,9 +102,9 @@ public class Git {
         // BLOBmaker("randomFiles/file10.txt");
         // fileMakerCheckerTester();
 
-        commitTester("Cooper Ren", "This commit will work");
-        commitTester("Jeff", "This commit will work");
-        printCommitHistory();
+        // commitTester("Cooper Ren", "This commit will work");
+        // commitTester("Jeff", "This commit will work");
+        // printCommitHistory();
 
 
     }
@@ -502,9 +502,9 @@ public class Git {
                     }
                 }
             }
-
-
-            String treeHash = Hashing.hashString(sb.toString().getBytes());
+            // Removed the extra newline at the end to prevent issues
+            String content = sb.toString().substring(0, sb.length() - 1);
+            String treeHash = Hashing.hashString(content.getBytes());
             File tree = new File(GitDirectory.objects.getPath(), treeHash);
             if (!tree.exists()) {
                 tree.createNewFile();
@@ -675,9 +675,11 @@ public class Git {
             StringBuilder subTreeBlobs = new StringBuilder();
             for (String blobs : subTree) {
                 subTreeBlobs.append(blobs).append("\n");
-                // fix this later
             }
-            String treeHash = Hashing.hashString(subTreeBlobs.toString().getBytes());
+            // removes excess new line
+            String subtreeContent =
+                    subTreeBlobs.toString().substring(0, subTreeBlobs.toString().length() - 1);
+            String treeHash = Hashing.hashString(subtreeContent.getBytes());
             int lastSlash = path.lastIndexOf('/');
             String subTreePath = path.substring(0, lastSlash);
             String treeLine = "tree " + treeHash + " " + subTreePath;
@@ -685,13 +687,13 @@ public class Git {
             sortSlashCountDescend(wList);
             File subtree = new File(GitDirectory.objects.getPath(), treeHash);
             // subtree.createNewFile();
-            Files.write(subtree.toPath(), subTreeBlobs.toString().getBytes(),
-                    StandardOpenOption.CREATE);
+            Files.write(subtree.toPath(), subtreeContent.getBytes(), StandardOpenOption.CREATE);
             // Writes to the working list file to keep it updated. It did not do this before.
-            if (wList.get(wList.size() - 1).substring(wList.get(wList.size() - 1).length() - 1)
-                    .equals("\n"))
+            if (wList.get(wList.size() - 1)
+                    .charAt(wList.get(wList.size() - 1).length() - 1) == '\n') {
                 wList.set(wList.size() - 1, wList.get(wList.size() - 1).substring(0,
                         wList.get(wList.size() - 1).length() - 1));
+            }
             Files.write(workingList.toPath(), wList, StandardCharsets.UTF_8);
             IndexTreeGenerator(wList);
             return treeHash;
