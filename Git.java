@@ -25,7 +25,7 @@ public class Git {
     public static File workingList = new File("git/objects/workingList");
 
     public static void main(String[] args) throws IOException {
-
+        // GitDirectory.masterRESET();
         // GitDirectory.makeGitDirectoryAndFiles();
         // makeGitDirectoryAndFilesTester();
 

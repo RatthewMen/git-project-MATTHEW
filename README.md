@@ -39,6 +39,17 @@ The commit() method captures the current state of the repository and saves it as
 checkout()
 The checkout() method restores the repository to match the state of a specific commit, effectively reverting all tracked files to the versions recorded in that commit. Given a commit hash, the method first retrieves metadata about that commit using Git.readCommit() and extracts its corresponding root tree hash. It then clears the working directory by recursively deleting all files and folders except essential project files—such as source code files, the .git directory, and configuration items like README.md and LICENSE. After the workspace is cleaned, the method calls Git.restoreTree() to reconstruct the project’s directory structure and restore file contents based on the tree object stored in the commit. Finally, it updates the HEAD file, ensuring that the repository’s reference state matches the restored version. I am not sure if this works. I will graciously accept partial credit.
 
+4.2 (10/12/29025)
+
+commit()
+The commit() method creates a new commit object that captures the current state of the repository. It begins by generating a new tree object using IndexTreeGenerator() and workingListMaker(), which represent the current file and contents. The method then reads the existing HEAD file to identify the hash of the most recent commit (if any), allowing the new commit to reference it as its parent. It creates a commit record containing key data — including the tree hash, parent commit, author, date, and summary message — and writes this information to a new file within the .git/objects directory. The SHA-1 hash of the commit content serves as its unique identifier, which is also written to the HEAD file to mark it as the latest commit. Additionally, a new CommitNode is created and appended to the commitHistory linked list to maintain a record of commits.
+
+commitTester():
+The commitTester() method simulates the process of creating a commit by first generating ten random files and turning each into a blob object. It then calls the commit() method with the provided author and message to create a new commit representing these files. This function is primarily used for testing the commit workflow.
+
+printCommitHistory()
+The printCommitHistory() method displays all commits stored in the commitHistory linked list. For each commit, it prints its hash, parent hash, tree hash, author, and message, providing a readable overview of the repository’s commit history.
+
 4.1 (10/9/2025)
 
 int slashCount(String line):
