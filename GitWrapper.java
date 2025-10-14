@@ -17,7 +17,6 @@ public class GitWrapper {
      * initial files (index, HEAD) required for a Git repository.
      */
     public void init() {
-        GitDirectory.deleteGit();
         GitDirectory.makeGitDirectoryAndFiles();
     }
 
@@ -88,8 +87,8 @@ public class GitWrapper {
             Map<String, String> commitData = Git.readCommit(commitHash);
             String treeHash = commitData.get("tree");
             if (treeHash == null || treeHash.isEmpty()) {
-            throw new IOException("Commit has no tree: " + commitHash);
-        }
+                throw new IOException("Commit has no tree: " + commitHash);
+            }
             File workingDirectory = new File(".");
             for (File file : workingDirectory.listFiles()) {
                 if (!file.getName().contains(".git") || !file.getName().equals(null)
