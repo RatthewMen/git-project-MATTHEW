@@ -779,8 +779,13 @@ public class Git {
             String hash = parts[1];
             String name = parts[2];
             if (type.equals("blob")) {
+                File file = new File(directory, name);
+                File parent = file.getParentFile();
+                if (parent != null) {
+                    parent.mkdir();
+                }
                 byte[] content = Files.readAllBytes(new File(GitDirectory.objects, hash).toPath());
-                Files.write(new File(directory, name).toPath(), content);
+                Files.write(file.toPath(), content);
             } else if (type.equals("tree")) {
                 File subDirectory = new File(directory, name);
                 subDirectory.mkdirs();
@@ -792,7 +797,9 @@ public class Git {
     public static void deleteRecursively(File file) {
         if (file.isDirectory()) {
             for (File sub : file.listFiles()) {
-                deleteRecursively(sub);
+                if (sub != null) {
+                    deleteRecursively(sub);
+                }
             }
         }
         file.delete();

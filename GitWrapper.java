@@ -87,6 +87,9 @@ public class GitWrapper {
         try {
             Map<String, String> commitData = Git.readCommit(commitHash);
             String treeHash = commitData.get("tree");
+            if (treeHash == null || treeHash.isEmpty()) {
+            throw new IOException("Commit has no tree: " + commitHash);
+        }
             File workingDirectory = new File(".");
             for (File file : workingDirectory.listFiles()) {
                 if (!file.getName().contains(".git") || !file.getName().equals(null)
