@@ -8,9 +8,9 @@ import java.util.Random;
 public class RandomFiles {
 
     public static File randomFiles = new File("randomFiles");
-        
-    public static void randomFileMaker(int numberofFiles){
-        if (!randomFiles.exists()){
+
+    public static void randomFileMaker(int numberofFiles) {
+        if (!randomFiles.exists()) {
             randomFiles.mkdir();
         }
 
@@ -18,7 +18,7 @@ public class RandomFiles {
         String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
         for (int i = 1; i <= numberofFiles; i++) {
             try {
-                int length = rand.nextInt(41) + 100; //length of text
+                int length = rand.nextInt(41) + 100; // length of text
 
                 StringBuilder sb = new StringBuilder(length);
                 for (int j = 0; j < length; j++) {
@@ -28,16 +28,17 @@ public class RandomFiles {
 
                 String fileName = "file" + i + ".txt";
                 File newFile = new File(randomFiles.getPath(), fileName);
-                Files.write(newFile.toPath(), str.getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE);
-                //System.out.println("Created " + fileName + " with content: " + str);
+                Files.write(newFile.toPath(), str.getBytes(StandardCharsets.UTF_8),
+                        StandardOpenOption.CREATE);
+                // System.out.println("Created " + fileName + " with content: " + str);
 
             } catch (Exception e) {
                 System.err.println("Error creating random text file #" + i);
             }
         }
     }
-    
-    public static void deleteRandomFileMaker(){
+
+    public static void deleteRandomFileMaker() {
         File[] files = randomFiles.listFiles();
         if (files != null) {
             for (File file : files) {
@@ -50,32 +51,32 @@ public class RandomFiles {
         randomFiles.delete();
     }
 
-    //https://stackoverflow.com/questions/7899525/how-to-split-a-string-by-space
-    public static boolean FileMakerChecker(){
+    // https://stackoverflow.com/questions/7899525/how-to-split-a-string-by-space
+    public static boolean FileMakerChecker() {
         try {
             List<String> lines = Files.readAllLines(GitDirectory.index.toPath());
-            ArrayList<String> hashes = new ArrayList<String>();
-            ArrayList<String> fileNames = new ArrayList<String>();
+            List<String> hashes = new ArrayList<>();
+            List<String> fileNames = new ArrayList<>();
 
-            for (String line : lines){
+            for (String line : lines) {
                 String[] parts = line.split(" ", 2);
                 hashes.add(parts[0]);
                 fileNames.add(parts[1]);
             }
 
-            //checking blobs
-            for (String hash : hashes){
-                if (Git.BlobChecker(hash) == false){
-                    //System.out.println(hash + " is not found");
+            // checking blobs
+            for (String hash : hashes) {
+                if (Git.BlobChecker(hash) == false) {
+                    // System.out.println(hash + " is not found");
                     return false;
                 }
-                
+
             }
-            
-            //checking Files
-            for (String fileName : fileNames){
-                if (randomFilesChecker(fileName) == false){
-                    //System.out.println(fileName + " is not found");
+
+            // checking Files
+            for (String fileName : fileNames) {
+                if (randomFilesChecker(fileName) == false) {
+                    // System.out.println(fileName + " is not found");
                     return false;
                 }
             }
@@ -89,11 +90,11 @@ public class RandomFiles {
         return false;
     }
 
-    public static boolean randomFilesChecker(String fileName){
+    public static boolean randomFilesChecker(String fileName) {
         File[] files = randomFiles.listFiles();
         if (files != null) {
             for (File file : files) {
-                if (file.getName().equals(fileName)){
+                if (file.getName().equals(fileName)) {
                     return true;
                 }
             }
@@ -101,5 +102,5 @@ public class RandomFiles {
         return false;
     }
 
-   
+
 }
